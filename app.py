@@ -1,15 +1,39 @@
+import os
 import pickle
 import json
 import pandas as pd
 import requests
-from flask import Flask, render_template, request, jsonify, Response, stream_with_context
+from flask import (Flask, render_template, request, jsonify,
+                   Response, stream_with_context,
+                   session, redirect, url_for, flash)
+from authlib.integrations.flask_client import OAuth
+from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('FLASK_SECRET', 'filmroll-dev-secret-change-in-prod')
+
+# Trust Heroku's reverse proxy so OAuth redirect uses https://
+from werkzeug.middleware.proxy_fix import ProxyFix
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
+# ── Google OAuth config ──────────────────────────────────────
+GOOGLE_CLIENT_ID     = os.environ.get('GOOGLE_CLIENT_ID', '')
+GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
+
+oauth = OAuth(app)
+google = oauth.register(
+    name='google',
+    client_id=GOOGLE_CLIENT_ID,
+    client_secret=GOOGLE_CLIENT_SECRET,
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={'scope': 'openid email profile'},
+)
 
 API_KEY  = 'ebef1aa0b639138c3040e6929ea9f1eb'
 IMG_BASE = 'https://image.tmdb.org/t/p/w500'
 TMDB_BASE = 'https://api.themoviedb.org/3'
-SEARCH_URL = f'{TMDB_BASE}/search/movie'
+SEARCH_MULTI_URL = f'{TMDB_BASE}/search/multi'
 
 OLLAMA_BASE = 'http://localhost:11434'
 LLAMA_MODEL = 'llama3.2'
@@ -42,10 +66,11 @@ def tmdb_get(path, extra_params=None):
 
 
 def fetch_poster_from_tmdb(title):
-    data = tmdb_get('/search/movie', {'query': title})
+    data = tmdb_get('/search/multi', {'query': title})
     results = data.get('results', [])
-    if results and results[0].get('poster_path'):
-        return IMG_BASE + results[0]['poster_path']
+    for result in results:
+        if result.get('poster_path'):
+            return IMG_BASE + result['poster_path']
     return None
 
 
@@ -59,7 +84,7 @@ def get_poster(poster_path, title=None):
     return 'https://via.placeholder.com/500x750/ede9e0/7a7060?text=No+Poster'
 
 
-def get_movie_id_from_row(row):
+def get_item_id_from_row(row):
     """Safely extract movie_id from a DataFrame row."""
     val = row.get('movie_id')
     if val is None:
@@ -73,13 +98,14 @@ def get_movie_id_from_row(row):
         return None
 
 
-def build_movie_dict(row, score=None):
+def build_item_dict(row, score=None):
     d = {
-        'movie_id': get_movie_id_from_row(row),
-        'title':    row['title'],
-        'poster':   get_poster(row.get('poster_path'), row['title']),
-        'rating':   round(float(row.get('vote_average', 0)), 1),
-        'overview': row.get('overview', ''),
+        'movie_id':   get_item_id_from_row(row),
+        'media_type': row.get('media_type', 'movie'),
+        'title':      row['title'],
+        'poster':     get_poster(row.get('poster_path'), row['title']),
+        'rating':     round(float(row.get('vote_average', 0)), 1),
+        'overview':   row.get('overview', ''),
     }
     if score is not None:
         d['score'] = round(float(score), 3)
@@ -95,7 +121,7 @@ def recommend(movie_title, n=8):
     distances = similarity[idx]
     top_n     = sorted(enumerate(distances), key=lambda x: x[1], reverse=True)[1:n + 1]
 
-    return [build_movie_dict(movies.iloc[i], score) for i, score in top_n]
+    return [build_item_dict(movies.iloc[i], score) for i, score in top_n]
 
 
 # ── Ollama / Llama helpers ──────────────────────────────────────
@@ -116,11 +142,11 @@ def ollama_available():
 def build_system_prompt(context=None):
     """Build a movie-expert system prompt for Llama."""
     base = (
-        "You are FilmRoll AI, a passionate and knowledgeable movie expert assistant. "
-        "You help users discover and discuss movies. Keep responses concise (2-4 sentences usually), "
-        "enthusiastic, and conversational. Use movie terminology naturally. "
-        "When recommending movies, briefly explain WHY you think the user would enjoy them. "
-        "If you don't know about a specific movie, say so honestly."
+        "You are FilmRoll AI, a passionate and knowledgeable entertainment expert assistant. "
+        "You help users discover and discuss movies and TV shows. Keep responses concise (2-4 sentences usually), "
+        "enthusiastic, and conversational. Use terminology naturally. "
+        "When recommending titles, briefly explain WHY you think the user would enjoy them. "
+        "If you don't know about a specific title, say so honestly."
     )
 
     if context:
@@ -137,7 +163,7 @@ def build_system_prompt(context=None):
         if recs:
             rec_titles = [r['title'] for r in recs[:8]]
             base += (
-                f"\n\nThe system recommended these similar films: {', '.join(rec_titles)}. "
+                f"\n\nThe system recommended these similar titles: {', '.join(rec_titles)}. "
                 "You can reference these when the user asks about the recommendations."
             )
 
@@ -173,28 +199,92 @@ def stream_ollama_chat(messages):
         yield f"data: {json.dumps({'content': f'Error: {str(e)}', 'done': True})}\n\n"
 
 
+# ── Auth helpers ──────────────────────────────────────────────
+
+def login_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('user'):
+            return redirect(url_for('login_page'))
+        return f(*args, **kwargs)
+    return decorated
+
+
+# ── Auth Routes ───────────────────────────────────────────────
+
+@app.route('/login')
+def login_page():
+    if session.get('user'):
+        return redirect(url_for('index'))
+    return render_template('login.html')
+
+
+@app.route('/auth/google')
+def google_login():
+    redirect_uri = url_for('google_callback', _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+
+@app.route('/auth/callback')
+def google_callback():
+    try:
+        token = google.authorize_access_token()
+        user_info = token.get('userinfo')
+        if not user_info:
+            user_info = google.userinfo()
+        session['user'] = {
+            'name':    user_info.get('name', ''),
+            'email':   user_info.get('email', ''),
+            'picture': user_info.get('picture', ''),
+        }
+        return redirect(url_for('index'))
+    except Exception as e:
+        flash('Sign-in failed. Please try again.')
+        return redirect(url_for('login_page'))
+
+
+@app.route('/logout')
+def logout():
+    session.pop('user', None)
+    return redirect(url_for('login_page'))
+
+
 # ── Routes ────────────────────────────────────────────────────
 
 @app.route('/')
+@login_required
 def index():
     movie_list = sorted(movies['title'].dropna().tolist())
-    return render_template('index.html', movies=movie_list)
+    user = session.get('user', {})
+    return render_template('index.html', movies=movie_list, user=user)
 
 
 @app.route('/trending')
 def trending():
-    """Fetch trending movies from TMDB for the homepage carousel."""
+    """Fetch trending movies and TV shows from TMDB for the homepage carousel."""
     try:
-        data = tmdb_get('/trending/movie/week')
-        results = data.get('results', [])[:12]
+        data_movie = tmdb_get('/trending/movie/week')
+        data_tv    = tmdb_get('/trending/tv/week')
+        
+        results_movie = data_movie.get('results', [])[:6]
+        results_tv    = data_tv.get('results', [])[:6]
+        
+        results = results_movie + results_tv
+        # pseudo-random mix
+        results.sort(key=lambda x: x.get('popularity', 0), reverse=True)
+        
         out = []
         for m in results:
             poster = IMG_BASE + m['poster_path'] if m.get('poster_path') else None
+            title = m.get('title') or m.get('name', '')
+            release_date = m.get('release_date') or m.get('first_air_date', '')
             out.append({
-                'title':   m.get('title', ''),
+                'title':   title,
                 'poster':  poster,
                 'rating':  round(float(m.get('vote_average', 0)), 1),
-                'year':    (m.get('release_date') or '')[:4],
+                'year':    release_date[:4],
+                'media_type': m.get('media_type', 'movie')
             })
         return jsonify(out)
     except Exception:
@@ -211,30 +301,48 @@ def get_recommendations():
     selected = None
     match = movies[movies['title'].str.lower() == title.lower()]
     if not match.empty:
-        selected = build_movie_dict(movies.iloc[match.index[0]])
+        selected = build_item_dict(movies.iloc[match.index[0]])
 
     return jsonify({'results': recs, 'selected': selected})
 
 
-@app.route('/movie-details', methods=['POST'])
-def movie_details():
-    data     = request.get_json()
-    movie_id = data.get('movie_id')
-    title    = data.get('title', '')
+@app.route('/details', methods=['POST'])
+def item_details():
+    data       = request.get_json()
+    item_id    = data.get('movie_id')  # legacy payload key from UI
+    title      = data.get('title', '')
+    media_type = data.get('media_type', 'movie')
 
     # If no stored id, search TMDB to get it
-    if not movie_id:
-        search = tmdb_get('/search/movie', {'query': title})
+    if not item_id:
+        search = tmdb_get('/search/multi', {'query': title})
         results = search.get('results', [])
-        if results:
-            movie_id = results[0]['id']
+        for r in results:
+            if r.get('media_type') in ('movie', 'tv'):
+                item_id = r['id']
+                media_type = r['media_type']
+                break
 
-    if not movie_id:
+    if not item_id:
         return jsonify({'error': 'Not found'}), 404
 
     # ── Trailer ──────────────────────────────────────────────
     trailer_key = None
-    videos = tmdb_get(f'/movie/{movie_id}/videos').get('results', [])
+    videos = tmdb_get(f'/{media_type}/{item_id}/videos').get('results', [])
+
+    # ── Cast ─────────────────────────────────────────────────
+    credits = tmdb_get(f'/{media_type}/{item_id}/credits')
+
+    # If both came back empty, the media_type may be wrong — try the other one
+    if not videos and not credits.get('cast'):
+        alt_type = 'tv' if media_type == 'movie' else 'movie'
+        alt_videos  = tmdb_get(f'/{alt_type}/{item_id}/videos').get('results', [])
+        alt_credits = tmdb_get(f'/{alt_type}/{item_id}/credits')
+        if alt_videos or alt_credits.get('cast'):
+            media_type = alt_type
+            videos     = alt_videos
+            credits    = alt_credits
+
     # prefer official trailer
     for v in videos:
         if v.get('site') == 'YouTube' and v.get('type') == 'Trailer' and v.get('official'):
@@ -251,9 +359,7 @@ def movie_details():
                 trailer_key = v['key']
                 break
 
-    # ── Cast ─────────────────────────────────────────────────
     cast = []
-    credits = tmdb_get(f'/movie/{movie_id}/credits')
     for c in credits.get('cast', [])[:8]:
         cast.append({
             'name':      c.get('name', ''),
@@ -262,9 +368,13 @@ def movie_details():
         })
 
     # ── Extra details ─────────────────────────────────────────
-    detail = tmdb_get(f'/movie/{movie_id}')
+    detail = tmdb_get(f'/{media_type}/{item_id}')
     genres = [g['name'] for g in detail.get('genres', [])]
-    runtime = detail.get('runtime')
+    if media_type == 'movie':
+        runtime = detail.get('runtime')
+    else:
+        run_times = detail.get('episode_run_time', [])
+        runtime = run_times[0] if run_times else None
     tagline = detail.get('tagline', '')
 
     return jsonify({
@@ -337,12 +447,12 @@ def ai_search():
     all_titles = movies['title'].dropna().tolist()
 
     prompt = (
-        f"The user is searching for a movie with this description: \"{query}\"\n\n"
-        f"Here is a list of available movies in the database:\n"
+        f"The user is searching for a movie or TV show with this description: \"{query}\"\n\n"
+        f"Here is a list of available titles in the database:\n"
         f"{json.dumps(all_titles[:500])}\n\n"
-        "Based on the user's description, which ONE movie title from the list above "
-        "is the best match? Reply with ONLY the exact movie title, nothing else. "
-        "If no movie matches well, reply with 'NO_MATCH'."
+        "Based on the user's description, which ONE title from the list above "
+        "is the best match? Reply with ONLY the exact title, nothing else. "
+        "If no title matches well, reply with 'NO_MATCH'."
     )
 
     try:
@@ -351,7 +461,7 @@ def ai_search():
             json={
                 'model': LLAMA_MODEL,
                 'messages': [
-                    {'role': 'system', 'content': 'You are a movie matching assistant. Reply with only the movie title.'},
+                    {'role': 'system', 'content': 'You are a database matching assistant. Reply with only the movie or TV show title.'},
                     {'role': 'user', 'content': prompt},
                 ],
                 'stream': False,

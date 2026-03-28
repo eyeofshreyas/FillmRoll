@@ -4,4 +4,6 @@ requests
 scikit-learn
 nltk
 flask
-ollama
+authlib
+python-dotenv
+gunicorn

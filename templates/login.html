@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Filmroll — Sign In</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400;1,600&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0e0c09;
+      --surface:  #161310;
+      --border:   #2a261f;
+      --gold:     #c9a84c;
+      --gold-dim: #8a6e2f;
+      --text:     #ede9e0;
+      --muted:    #7a7060;
+      --error:    #c0392b;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    /* ── film-strip background ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        repeating-linear-gradient(
+          90deg,
+          transparent 0px,
+          transparent 38px,
+          rgba(255,255,255,0.018) 38px,
+          rgba(255,255,255,0.018) 40px
+        ),
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(201,168,76,0.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── layout ── */
+    .page {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    /* ── left panel ── */
+    .left-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 60px 72px;
+      border-right: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .left-panel::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(201,168,76,0.04) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .filmroll-brand {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.8rem;
+      font-weight: 300;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 6px;
+    }
+
+    .brand-rule {
+      width: 48px;
+      height: 1px;
+      background: var(--gold-dim);
+      margin-bottom: 36px;
+    }
+
+    .left-tagline {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.6rem;
+      font-weight: 300;
+      line-height: 1.25;
+      color: var(--text);
+      margin-bottom: 20px;
+    }
+
+    .left-tagline em {
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    .left-sub {
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 320px;
+    }
+
+    /* ── film frames decoration ── */
+    .film-frames {
+      display: flex;
+      gap: 10px;
+      margin-top: 56px;
+    }
+
+    .frame {
+      width: 64px;
+      height: 88px;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      background: var(--surface);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .frame::before, .frame::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 10px;
+      height: 7px;
+      background: var(--bg);
+      border-radius: 1px;
+    }
+    .frame::before { top: 5px; }
+    .frame::after  { bottom: 5px; }
+
+    .frame-img {
+      position: absolute;
+      inset: 16px 4px;
+      background: linear-gradient(135deg, #1e1a14 0%, #2a2318 100%);
+    }
+
+    .frame:nth-child(2) .frame-img { background: linear-gradient(135deg, #1a1820 0%, #221e2a 100%); }
+    .frame:nth-child(3) .frame-img { background: linear-gradient(135deg, #1a1a14 0%, #28241a 100%); }
+    .frame:nth-child(4) .frame-img { background: linear-gradient(135deg, #181818 0%, #242020 100%); opacity: 0.5; }
+
+    /* ── right panel (login form) ── */
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 60px 72px;
+    }
+
+    .login-box {
+      width: 100%;
+      max-width: 360px;
+    }
+
+    .login-kicker {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .login-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.2rem;
+      font-weight: 400;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .login-sub {
+      font-size: 0.84rem;
+      color: var(--muted);
+      margin-bottom: 40px;
+      line-height: 1.6;
+    }
+
+    /* ── flash message ── */
+    .flash {
+      font-size: 0.82rem;
+      color: var(--error);
+      background: rgba(192,57,43,0.1);
+      border: 1px solid rgba(192,57,43,0.3);
+      border-radius: 4px;
+      padding: 10px 14px;
+      margin-bottom: 20px;
+    }
+
+    /* ── Google button ── */
+    .btn-google {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      padding: 14px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-google::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.4s ease;
+    }
+
+    .btn-google:hover {
+      border-color: var(--gold-dim);
+      background: #1c1810;
+      transform: translateY(-1px);
+    }
+
+    .btn-google:hover::before { transform: translateX(100%); }
+    .btn-google:active { transform: translateY(0); }
+
+    .google-icon svg { flex-shrink: 0; }
+
+    /* ── divider ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 28px 0;
+      color: var(--muted);
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── features list ── */
+    .features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 40px;
+    }
+
+    .features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.83rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .feat-icon {
+      width: 18px;
+      height: 18px;
+      border: 1px solid var(--gold-dim);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .feat-icon svg { color: var(--gold); }
+
+    /* ── footer note ── */
+    .login-footer {
+      margin-top: 36px;
+      font-size: 0.73rem;
+      color: var(--muted);
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    .login-footer a {
+      color: var(--gold-dim);
+      text-decoration: none;
+    }
+
+    .login-footer a:hover { color: var(--gold); }
+
+    /* ── responsive ── */
+    @media (max-width: 768px) {
+      .page { grid-template-columns: 1fr; }
+      .left-panel { display: none; }
+      .right-panel { padding: 48px 28px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+
+    <!-- ── LEFT: branding ── -->
+    <div class="left-panel">
+      <div class="filmroll-brand">Filmroll</div>
+      <div class="brand-rule"></div>
+
+      <h2 class="left-tagline">
+        Discover films<br>
+        you'll <em>actually love.</em>
+      </h2>
+      <p class="left-sub">
+        10,000+ movies and TV shows. Content-based recommendations powered by
+        cast, themes, genre, and mood — not what everyone else is watching.
+      </p>
+
+      <div class="film-frames">
+        <div class="frame"><div class="frame-img"></div></div>
+        <div class="frame"><div class="frame-img"></div></div>
+        <div class="frame"><div class="frame-img"></div></div>
+        <div class="frame"><div class="frame-img"></div></div>
+      </div>
+    </div>
+
+    <!-- ── RIGHT: login ── -->
+    <div class="right-panel">
+      <div class="login-box">
+
+        <div class="login-kicker">Welcome back</div>
+        <h1 class="login-title">Sign in to Filmroll</h1>
+        <p class="login-sub">Use your Google account to continue. No password required.</p>
+
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for msg in messages %}
+              <div class="flash">{{ msg }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <ul class="features">
+          <li>
+            <div class="feat-icon">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            Personalised recommendations based on your taste
+          </li>
+          <li>
+            <div class="feat-icon">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            Trailers, cast details & ratings in one place
+          </li>
+          <li>
+            <div class="feat-icon">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            AI-powered film chat assistant (when online)
+          </li>
+        </ul>
+
+        <a href="{{ url_for('google_login') }}" class="btn-google">
+          <span class="google-icon">
+            <!-- Official Google G icon -->
+            <svg width="20" height="20" viewBox="0 0 48 48">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+              <path fill="none" d="M0 0h48v48H0z"/>
+            </svg>
+          </span>
+          Continue with Google
+        </a>
+
+        <div class="divider">or</div>
+
+        <p style="font-size:0.82rem; color:var(--muted); text-align:center; line-height:1.6;">
+          Filmroll uses Google Sign-In. Your data stays private<br>and is never shared with third parties.
+        </p>
+
+        <div class="login-footer">
+          By continuing you agree to our
+          <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

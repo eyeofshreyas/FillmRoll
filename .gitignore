@@ -1,0 +1,25 @@
+# secrets
+.env
+
+# virtual environment
+.venv/
+venv/
+env/
+
+# python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# backup files
+*.backup
+*.pkl.backup
+
+# jupyter checkpoints
+.ipynb_checkpoints/
+
+# ruff cache
+.ruff_cache/
+
+# old files folder (large)
+old_filees/
