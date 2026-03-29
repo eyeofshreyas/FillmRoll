@@ -11,6 +11,9 @@ __pycache__/
 *.pyc
 *.pyo
 
+# large model files (stored on Hugging Face)
+similarity.pkl
+
 # backup files
 *.backup
 *.pkl.backup

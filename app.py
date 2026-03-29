@@ -11,6 +11,23 @@ from authlib.integrations.flask_client import OAuth
 from dotenv import load_dotenv
 load_dotenv()
 
+# ── Download similarity matrix from Hugging Face if not present ──
+def download_similarity():
+    similarity_path = 'similarity.pkl'
+    if not os.path.exists(similarity_path):
+        print("Downloading similarity.pkl from Hugging Face...")
+        hf_token = os.environ.get('HF_TOKEN', '')
+        url = 'https://huggingface.co/Shreyansh00700/FilmRoll/resolve/main/similarity.pkl'
+        headers = {'Authorization': f'Bearer {hf_token}'} if hf_token else {}
+        with requests.get(url, headers=headers, stream=True) as r:
+            r.raise_for_status()
+            with open(similarity_path, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+        print("Download complete.")
+
+download_similarity()
+
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET', 'filmroll-dev-secret-change-in-prod')
 
@@ -36,6 +53,8 @@ IMG_BASE = 'https://image.tmdb.org/t/p/w500'
 TMDB_BASE = 'https://api.themoviedb.org/3'
 SEARCH_MULTI_URL = f'{TMDB_BASE}/search/multi'
 
+OPEN_BASE="https://openrpunter.com"
+OPEN_API_API="/api/v1/chat/completions"
 OLLAMA_BASE = 'http://localhost:11434'
 LLAMA_MODEL = 'llama3.2'
 
