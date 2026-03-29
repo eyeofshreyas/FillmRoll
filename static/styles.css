@@ -2023,40 +2023,62 @@
 .mood-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
+    gap: 10px;
 }
 
 .mood-btn {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: 8px;
-    padding: 20px 12px;
+    gap: 14px;
+    padding: 18px 20px;
     background: var(--sur);
     border: 1px solid var(--rule);
+    border-left: 2px solid transparent;
     border-radius: var(--radius);
     cursor: pointer;
     transition: border-color 0.18s, background 0.18s, transform 0.14s;
     color: var(--text);
     font-family: 'DM Sans', system-ui, sans-serif;
+    text-align: left;
 }
 
 .mood-btn:hover {
-    border-color: var(--gold);
+    border-left-color: var(--gold);
     background: var(--sur2);
-    transform: translateY(-2px);
+    transform: translateY(-1px);
 }
 
 .mood-icon {
-    font-size: 1.6rem;
-    line-height: 1;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    color: var(--text2);
+    transition: color 0.18s;
+}
+
+.mood-btn:hover .mood-icon {
+    color: var(--gold);
+}
+
+.mood-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
 .mood-name {
-    font-size: 0.78rem;
-    font-weight: 500;
-    letter-spacing: 0.04em;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: var(--text);
+}
+
+.mood-sub {
+    font-size: 0.7rem;
+    font-weight: 400;
     color: var(--text2);
+    letter-spacing: 0.01em;
 }
 
 .mood-btn:hover .mood-name {

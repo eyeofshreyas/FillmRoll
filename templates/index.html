@@ -157,14 +157,47 @@
   <div class="home-section fade-up" id="mood-section">
     <div class="section-title">What's your mood?</div>
     <div class="mood-grid">
-      <button class="mood-btn" onclick="fetchMoodRecs('happy')"><span class="mood-icon">😊</span><span class="mood-name">Happy</span></button>
-      <button class="mood-btn" onclick="fetchMoodRecs('excited')"><span class="mood-icon">⚡</span><span class="mood-name">Excited</span></button>
-      <button class="mood-btn" onclick="fetchMoodRecs('romantic')"><span class="mood-icon">💕</span><span class="mood-name">Romantic</span></button>
-      <button class="mood-btn" onclick="fetchMoodRecs('sad')"><span class="mood-icon">😢</span><span class="mood-name">Emotional</span></button>
-      <button class="mood-btn" onclick="fetchMoodRecs('scared')"><span class="mood-icon">😱</span><span class="mood-name">Scary</span></button>
-      <button class="mood-btn" onclick="fetchMoodRecs('adventurous')"><span class="mood-icon">🗺️</span><span class="mood-name">Adventure</span></button>
-      <button class="mood-btn" onclick="fetchMoodRecs('curious')"><span class="mood-icon">🔍</span><span class="mood-name">Curious</span></button>
-      <button class="mood-btn" onclick="fetchMoodRecs('chill')"><span class="mood-icon">🍃</span><span class="mood-name">Chill</span></button>
+
+      <button class="mood-btn" onclick="fetchMoodRecs('happy')">
+        <svg class="mood-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M8.5 14s1 2 3.5 2 3.5-2 3.5-2"/><line x1="9" y1="9.5" x2="9.01" y2="9.5"/><line x1="15" y1="9.5" x2="15.01" y2="9.5"/></svg>
+        <div class="mood-text"><span class="mood-name">Happy</span><span class="mood-sub">Light &amp; uplifting</span></div>
+      </button>
+
+      <button class="mood-btn" onclick="fetchMoodRecs('excited')">
+        <svg class="mood-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <div class="mood-text"><span class="mood-name">Excited</span><span class="mood-sub">High energy</span></div>
+      </button>
+
+      <button class="mood-btn" onclick="fetchMoodRecs('romantic')">
+        <svg class="mood-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <div class="mood-text"><span class="mood-name">Romantic</span><span class="mood-sub">Love &amp; longing</span></div>
+      </button>
+
+      <button class="mood-btn" onclick="fetchMoodRecs('sad')">
+        <svg class="mood-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M16 16s-1-2-4-2-4 2-4 2"/><line x1="9" y1="9.5" x2="9.01" y2="9.5"/><line x1="15" y1="9.5" x2="15.01" y2="9.5"/></svg>
+        <div class="mood-text"><span class="mood-name">Emotional</span><span class="mood-sub">Deep &amp; moving</span></div>
+      </button>
+
+      <button class="mood-btn" onclick="fetchMoodRecs('scared')">
+        <svg class="mood-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <div class="mood-text"><span class="mood-name">Scary</span><span class="mood-sub">Tension &amp; dread</span></div>
+      </button>
+
+      <button class="mood-btn" onclick="fetchMoodRecs('adventurous')">
+        <svg class="mood-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+        <div class="mood-text"><span class="mood-name">Adventure</span><span class="mood-sub">Bold &amp; daring</span></div>
+      </button>
+
+      <button class="mood-btn" onclick="fetchMoodRecs('curious')">
+        <svg class="mood-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <div class="mood-text"><span class="mood-name">Curious</span><span class="mood-sub">Mind-bending</span></div>
+      </button>
+
+      <button class="mood-btn" onclick="fetchMoodRecs('chill')">
+        <svg class="mood-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M4.93 4.93l14.14 14.14M2 12h20M4.93 19.07l14.14-14.14"/></svg>
+        <div class="mood-text"><span class="mood-name">Chill</span><span class="mood-sub">Easy &amp; relaxed</span></div>
+      </button>
+
     </div>
   </div>
 
