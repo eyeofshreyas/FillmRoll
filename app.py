@@ -141,7 +141,7 @@ def recommend(movie_title, n=8):
     distances = similarity[idx]
     top_n     = sorted(enumerate(distances), key=lambda x: x[1], reverse=True)[1:n + 1]
 
-    return [build_item_dict(movies.iloc[i], score) for i, score in top_n]
+    return [build_item_dict(movies.iloc[i], score) for i, score in top_n if i < len(movies)]
 
 
 # ── Ollama / Llama helpers ──────────────────────────────────────
