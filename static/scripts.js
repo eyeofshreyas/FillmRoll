@@ -212,9 +212,20 @@ async function fetchRecs() {
 function fetchRecommendations() { fetchRecs(); }
 
 /* ── nav helpers ── */
+const NAV_MAP = {
+    'nav-home':     'mob-home',
+    'nav-trending': 'mob-trending',
+    'nav-browse':   'mob-browse',
+    'nav-foryou':   'mob-foryou',
+};
+
 function setActiveNav(id) {
-    ['nav-home', 'nav-trending', 'nav-browse'].forEach(n => {
-        $(n).classList.toggle('active', n === id);
+    ['nav-home', 'nav-trending', 'nav-browse', 'nav-foryou'].forEach(n => {
+        const el = $(n); if (el) el.classList.toggle('active', n === id);
+    });
+    // mirror on mobile bottom nav
+    ['mob-home', 'mob-trending', 'mob-browse', 'mob-foryou'].forEach(n => {
+        const el = $(n); if (el) el.classList.toggle('active', n === NAV_MAP[id]);
     });
 }
 
@@ -222,8 +233,22 @@ function showHomeSections() {
     $('results-page').style.display = 'none';
     $('hero-section').style.display = '';
     $('trending-section').style.display = '';
+    $('mood-section').style.display = '';
     $('genre-section').style.display = '';
     document.querySelectorAll('.home-spacer').forEach(s => s.style.display = '');
+}
+
+function showResultsPage() {
+    $('hero-section').style.display = 'none';
+    $('trending-section').style.display = 'none';
+    $('mood-section').style.display = 'none';
+    $('genre-section').style.display = 'none';
+    document.querySelectorAll('.home-spacer').forEach(s => s.style.display = 'none');
+    setActiveNav('');
+    $('results-page').style.display = 'block';
+    $('spinner').classList.add('active');
+    $('selected-section').style.display = 'none';
+    $('rec-section').style.display = 'none';
 }
 
 function navHome() {
@@ -474,6 +499,7 @@ fetchRecs = async function () {
 
     $('hero-section').style.display = 'none';
     $('trending-section').style.display = 'none';
+    $('mood-section').style.display = 'none';
     $('genre-section').style.display = 'none';
     document.querySelectorAll('.home-spacer').forEach(s => s.style.display = 'none');
 
@@ -553,3 +579,144 @@ async function doAiSearch() {
         alert('AI search failed. Make sure Ollama is running.');
     }
 }
+
+/* ══════════════════════════════════════════
+   MOOD-BASED RECOMMENDATIONS
+══════════════════════════════════════════ */
+const MOOD_LABELS = {
+    happy: '😊 Happy', excited: '⚡ Excited', romantic: '💕 Romantic',
+    sad: '😢 Emotional', scared: '😱 Scary', adventurous: '🗺️ Adventurous',
+    curious: '🔍 Curious', chill: '🍃 Chill',
+};
+
+async function fetchMoodRecs(mood) {
+    showResultsPage();
+    const n = parseInt($('num-recs').value);
+
+    try {
+        const res = await fetch('/mood', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mood, n }),
+        });
+        const data = await res.json();
+        $('spinner').classList.remove('active');
+
+        if (!data.results || !data.results.length) {
+            showHomeSections(); return;
+        }
+
+        const pseudo = {
+            title: `Mood: ${MOOD_LABELS[mood] || mood}`,
+            poster: null,
+            overview: `${data.results.length} picks for when you're feeling ${mood}.`,
+            rating: null,
+        };
+        renderFeatured(pseudo, data.results);
+        renderGrid(data.results);
+    } catch (_) {
+        $('spinner').classList.remove('active');
+        showHomeSections();
+    }
+}
+
+/* ══════════════════════════════════════════
+   COLLABORATIVE FILTERING — For You
+══════════════════════════════════════════ */
+async function fetchCFRecs() {
+    showResultsPage();
+    const n = parseInt($('num-recs').value);
+
+    try {
+        const res = await fetch('/cf-recommend', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ n }),
+        });
+        const data = await res.json();
+        $('spinner').classList.remove('active');
+
+        if (!data.results || !data.results.length) {
+            showHomeSections();
+            setActiveNav('nav-home');
+            alert(data.message || 'Rate some movies in the modal to get personalised picks.');
+            return;
+        }
+
+        const pseudo = {
+            title: 'For You',
+            poster: null,
+            overview: `Based on ${data.rated_count} film${data.rated_count !== 1 ? 's' : ''} you rated — titles we think you'll love.`,
+            rating: null,
+        };
+        renderFeatured(pseudo, data.results);
+        renderGrid(data.results);
+    } catch (_) {
+        $('spinner').classList.remove('active');
+        showHomeSections();
+    }
+}
+
+function navForYou() {
+    setActiveNav('nav-foryou');
+    fetchCFRecs();
+}
+
+/* ══════════════════════════════════════════
+   STAR RATING — in modal
+══════════════════════════════════════════ */
+let userRatings = {};        // local mirror of session ratings
+let currentModalMovie = null;
+
+// Intercept openModal to track current movie + restore rating
+const _origOpenModal = openModal;
+openModal = async function (data) {
+    currentModalMovie = data;
+    highlightStars(userRatings[data.title] || 0);
+    $('rate-msg').textContent = '';
+    await _origOpenModal(data);
+};
+
+function highlightStars(n) {
+    document.querySelectorAll('#modal-stars .star').forEach(s => {
+        s.classList.toggle('active', parseInt(s.dataset.v) <= n);
+    });
+}
+
+document.querySelectorAll('#modal-stars .star').forEach(star => {
+    star.addEventListener('mouseenter', () => highlightStars(parseInt(star.dataset.v)));
+    star.addEventListener('mouseleave', () => {
+        highlightStars(currentModalMovie ? (userRatings[currentModalMovie.title] || 0) : 0);
+    });
+    star.addEventListener('click', async () => {
+        if (!currentModalMovie) return;
+        const v = parseInt(star.dataset.v);
+        userRatings[currentModalMovie.title] = v;
+        highlightStars(v);
+        try {
+            await fetch('/rate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: currentModalMovie.title, rating: v }),
+            });
+            $('rate-msg').textContent = 'Saved!';
+            setTimeout(() => { if ($('rate-msg')) $('rate-msg').textContent = ''; }, 2000);
+            updateForYouBadge();
+        } catch (_) { }
+    });
+});
+
+function updateForYouBadge() {
+    const count = Object.keys(userRatings).length;
+    const val = count > 0 ? count : '';
+    [$('foryou-badge'), $('mob-foryou-badge')].forEach(b => { if (b) b.textContent = val; });
+}
+
+async function loadUserRatings() {
+    try {
+        const res = await fetch('/my-ratings');
+        userRatings = await res.json();
+        updateForYouBadge();
+    } catch (_) { }
+}
+loadUserRatings();

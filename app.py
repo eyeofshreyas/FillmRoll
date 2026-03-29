@@ -1,6 +1,7 @@
 import os
 import pickle
 import json
+import numpy as np
 import pandas as pd
 import requests
 from flask import (Flask, render_template, request, jsonify,
@@ -481,6 +482,104 @@ def ai_search():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+# ── Mood → TMDB genre mapping ────────────────────────────────
+MOOD_GENRES = {
+    'happy':       [35, 10751, 16],   # Comedy, Family, Animation
+    'excited':     [28, 12, 878],     # Action, Adventure, Sci-Fi
+    'romantic':    [10749, 18],       # Romance, Drama
+    'sad':         [18, 10749],       # Drama, Romance
+    'scared':      [27, 53],          # Horror, Thriller
+    'adventurous': [12, 14, 878],     # Adventure, Fantasy, Sci-Fi
+    'curious':     [99, 36, 9648],    # Documentary, History, Mystery
+    'chill':       [35, 16, 10402],   # Comedy, Animation, Music
+}
+
+
+@app.route('/mood', methods=['POST'])
+def mood_recommend():
+    data = request.get_json()
+    mood = data.get('mood', '').lower()
+    n = int(data.get('n', 12))
+
+    genre_ids = MOOD_GENRES.get(mood)
+    if not genre_ids:
+        return jsonify({'error': 'Unknown mood'}), 400
+
+    result = tmdb_get('/discover/movie', {
+        'with_genres': ','.join(map(str, genre_ids)),
+        'sort_by': 'vote_average.desc',
+        'vote_count.gte': 500,
+        'page': 1,
+    })
+
+    items = []
+    for m in result.get('results', [])[:n]:
+        poster = IMG_BASE + m['poster_path'] if m.get('poster_path') else None
+        items.append({
+            'title':      m.get('title', ''),
+            'poster':     poster,
+            'rating':     round(float(m.get('vote_average', 0)), 1),
+            'overview':   m.get('overview', ''),
+            'movie_id':   m.get('id'),
+            'media_type': 'movie',
+            'score':      round(float(m.get('vote_average', 0)) / 10, 3),
+        })
+    return jsonify({'results': items, 'mood': mood})
+
+
+@app.route('/rate', methods=['POST'])
+def rate_movie():
+    data = request.get_json()
+    title = data.get('title', '')
+    rating = int(data.get('rating', 0))
+    if not title or not (1 <= rating <= 5):
+        return jsonify({'error': 'Invalid rating'}), 400
+    if 'ratings' not in session:
+        session['ratings'] = {}
+    session['ratings'][title] = rating
+    session.modified = True
+    return jsonify({'ok': True, 'total': len(session['ratings'])})
+
+
+@app.route('/my-ratings')
+def my_ratings():
+    return jsonify(session.get('ratings', {}))
+
+
+@app.route('/cf-recommend', methods=['POST'])
+def cf_recommend():
+    """Weighted content-based collaborative filtering using session ratings."""
+    data = request.get_json()
+    n = int(data.get('n', 8))
+
+    ratings = session.get('ratings', {})
+    if not ratings:
+        return jsonify({'results': [], 'message': 'Rate some movies first'})
+
+    rated_lower = {t.lower() for t in ratings}
+    combined = np.zeros(len(movies))
+
+    for title, user_rating in ratings.items():
+        match = movies[movies['title'].str.lower() == title.lower()]
+        if match.empty:
+            continue
+        idx = match.index[0]
+        combined += similarity[idx] * (user_rating / 5.0)
+
+    # Zero out already-rated movies
+    for title in ratings:
+        match = movies[movies['title'].str.lower() == title.lower()]
+        if not match.empty:
+            combined[match.index[0]] = 0.0
+
+    top_indices = np.argsort(combined)[::-1][:n]
+    results = [
+        build_item_dict(movies.iloc[int(i)], float(combined[i]))
+        for i in top_indices if combined[i] > 0
+    ]
+    return jsonify({'results': results, 'rated_count': len(ratings)})
 
 
 if __name__ == '__main__':
