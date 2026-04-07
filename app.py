@@ -56,7 +56,7 @@ TMDB_BASE = 'https://api.themoviedb.org/3'
 SEARCH_MULTI_URL = f'{TMDB_BASE}/search/multi'
 
 HF_TOKEN    = os.environ.get('HF_TOKEN', '')
-HF_MODEL    = 'mistralai/Mistral-7B-Instruct-v0.3'
+HF_MODEL    = 'meta-llama/Meta-Llama-3.1-8B-Instruct'
 HF_CHAT_URL = f'https://api-inference.huggingface.co/models/{HF_MODEL}/v1/chat/completions'
 
 # Load model once at startup
@@ -193,6 +193,14 @@ def stream_hf_chat(messages):
             stream=True,
             timeout=60,
         )
+
+        if r.status_code != 200:
+            try:
+                err_msg = r.json().get('error', r.text)
+            except Exception:
+                err_msg = r.text
+            yield f"data: {json.dumps({'content': f'HF API Error ({r.status_code}): {err_msg}', 'done': True})}\n\n"
+            return
 
         for line in r.iter_lines():
             if not line:
