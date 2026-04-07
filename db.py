@@ -14,6 +14,7 @@ def init_firebase():
         b64_creds = os.environ.get('FIREBASE_CREDENTIALS_BASE64')
         if b64_creds:
             try:
+                b64_creds = b64_creds.strip().strip('"\'')
                 dict_creds = json.loads(base64.b64decode(b64_creds).decode('utf-8'))
                 cred = credentials.Certificate(dict_creds)
                 firebase_admin.initialize_app(cred)
