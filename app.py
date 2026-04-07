@@ -11,6 +11,8 @@ from authlib.integrations.flask_client import OAuth
 from dotenv import load_dotenv
 load_dotenv()
 
+from db import get_user_ratings, save_user_rating, save_last_mood
+
 # ── Download similarity matrix from Hugging Face if not present ──
 def download_similarity():
     similarity_path = 'similarity.pkl'
@@ -31,7 +33,7 @@ download_similarity()
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET', 'filmroll-dev-secret-change-in-prod')
 
-# Trust Heroku's reverse proxy so OAuth redirect uses https://
+# Trust Heroku's reverse proxy so OAuth re direct uses https://
 from werkzeug.middleware.proxy_fix import ProxyFix
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
@@ -268,6 +270,8 @@ def google_callback():
 def logout():
     session.pop('user', None)
     return redirect(url_for('login_page'))
+
+
 
 
 # ── Routes ────────────────────────────────────────────────────
@@ -515,26 +519,70 @@ MOOD_GENRES = {
     'chill':       [35, 16, 10402],   # Comedy, Animation, Music
 }
 
+# ── Genre slug → TMDB genre ID ───────────────────────────────
+GENRE_IDS = {
+    'action':      28,
+    'animation':   16,
+    'comedy':      35,
+    'crime':       80,
+    'documentary': 99,
+    'drama':       18,
+    'fantasy':     14,
+    'horror':      27,
+    'mystery':     9648,
+    'romance':     10749,
+    'scifi':       878,
+    'thriller':    53,
+}
+
+
+def weighted_score(item):
+    """Credibility-weighted score: vote_average × (vote_count / (vote_count + 5000)).
+    Rewards films that are both well-rated AND have enough votes to be trustworthy.
+    Films with few votes get pulled toward zero; films with 5k+ votes get their full rating.
+    """
+    avg = float(item.get('vote_average', 0))
+    cnt = float(item.get('vote_count', 0))
+    return avg * (cnt / (cnt + 5000))
+
+
+def fetch_tmdb_discover(genre_ids, pages=3, min_votes=200):
+    """Fetch movies from TMDB discover across multiple pages, deduped by id."""
+    seen = set()
+    items = []
+    for page in range(1, pages + 1):
+        result = tmdb_get('/discover/movie', {
+            'with_genres': ','.join(map(str, genre_ids)),
+            'sort_by': 'popularity.desc',
+            'vote_count.gte': min_votes,
+            'page': page,
+        })
+        for m in result.get('results', []):
+            if m['id'] not in seen:
+                seen.add(m['id'])
+                items.append(m)
+    return items
+
 
 @app.route('/mood', methods=['POST'])
 def mood_recommend():
     data = request.get_json()
     mood = data.get('mood', '').lower()
-    n = int(data.get('n', 12))
+    n = int(data.get('n', 60))
+
+    user_email = session.get('user', {}).get('email')
+    if user_email and mood:
+        save_last_mood(user_email, mood)
 
     genre_ids = MOOD_GENRES.get(mood)
     if not genre_ids:
         return jsonify({'error': 'Unknown mood'}), 400
 
-    result = tmdb_get('/discover/movie', {
-        'with_genres': ','.join(map(str, genre_ids)),
-        'sort_by': 'vote_average.desc',
-        'vote_count.gte': 500,
-        'page': 1,
-    })
+    raw = fetch_tmdb_discover(genre_ids, pages=3, min_votes=300)
+    raw.sort(key=weighted_score, reverse=True)
 
     items = []
-    for m in result.get('results', [])[:n]:
+    for m in raw[:n]:
         poster = IMG_BASE + m['poster_path'] if m.get('poster_path') else None
         items.append({
             'title':      m.get('title', ''),
@@ -543,9 +591,37 @@ def mood_recommend():
             'overview':   m.get('overview', ''),
             'movie_id':   m.get('id'),
             'media_type': 'movie',
-            'score':      round(float(m.get('vote_average', 0)) / 10, 3),
+            'score':      round(weighted_score(m) / 10, 3),
         })
     return jsonify({'results': items, 'mood': mood})
+
+
+@app.route('/genre', methods=['POST'])
+def genre_recommend():
+    data = request.get_json()
+    genre = data.get('genre', '').lower()
+    n = int(data.get('n', 60))
+
+    genre_id = GENRE_IDS.get(genre)
+    if not genre_id:
+        return jsonify({'error': 'Unknown genre'}), 400
+
+    raw = fetch_tmdb_discover([genre_id], pages=3, min_votes=200)
+    raw.sort(key=weighted_score, reverse=True)
+
+    items = []
+    for m in raw[:n]:
+        poster = IMG_BASE + m['poster_path'] if m.get('poster_path') else None
+        items.append({
+            'title':      m.get('title', ''),
+            'poster':     poster,
+            'rating':     round(float(m.get('vote_average', 0)), 1),
+            'overview':   m.get('overview', ''),
+            'movie_id':   m.get('id'),
+            'media_type': 'movie',
+            'score':      round(weighted_score(m) / 10, 3),
+        })
+    return jsonify({'results': items, 'genre': genre})
 
 
 @app.route('/rate', methods=['POST'])
@@ -555,25 +631,42 @@ def rate_movie():
     rating = int(data.get('rating', 0))
     if not title or not (1 <= rating <= 5):
         return jsonify({'error': 'Invalid rating'}), 400
+        
+    user_email = session.get('user', {}).get('email')
+    if user_email:
+        save_user_rating(user_email, title, rating)
+        
     if 'ratings' not in session:
         session['ratings'] = {}
     session['ratings'][title] = rating
     session.modified = True
+    
     return jsonify({'ok': True, 'total': len(session['ratings'])})
-
 
 @app.route('/my-ratings')
 def my_ratings():
+    user_email = session.get('user', {}).get('email')
+    if user_email and 'db_synced' not in session:
+        session['ratings'] = get_user_ratings(user_email)
+        session['db_synced'] = True
+        session.modified = True
     return jsonify(session.get('ratings', {}))
 
 
 @app.route('/cf-recommend', methods=['POST'])
 def cf_recommend():
-    """Weighted content-based collaborative filtering using session ratings."""
+    """Weighted content-based collaborative filtering using session/DB ratings."""
     data = request.get_json()
     n = int(data.get('n', 8))
 
+    user_email = session.get('user', {}).get('email')
+    if user_email and 'db_synced' not in session:
+        session['ratings'] = get_user_ratings(user_email)
+        session['db_synced'] = True
+        session.modified = True
+        
     ratings = session.get('ratings', {})
+
     if not ratings:
         return jsonify({'results': [], 'message': 'Rate some movies first'})
 

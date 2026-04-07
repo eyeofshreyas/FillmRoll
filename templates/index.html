@@ -205,30 +205,18 @@
   <div class="home-section fade-up" id="genre-section">
     <div class="section-title">Browse by genre</div>
     <div class="genre-grid">
-      <div class="genre-card" onclick="searchByGenre('The Dark Knight')"><span class="g-name">Action</span><span
-          class="g-num">01</span></div>
-      <div class="genre-card" onclick="searchByGenre('Spirited Away')"><span class="g-name">Animation</span><span
-          class="g-num">02</span></div>
-      <div class="genre-card" onclick="searchByGenre('The Grand Budapest Hotel')"><span
-          class="g-name">Comedy</span><span class="g-num">03</span></div>
-      <div class="genre-card" onclick="searchByGenre('Pulp Fiction')"><span class="g-name">Crime</span><span
-          class="g-num">04</span></div>
-      <div class="genre-card" onclick="searchByGenre('March of the Penguins')"><span
-          class="g-name">Documentary</span><span class="g-num">05</span></div>
-      <div class="genre-card" onclick="searchByGenre('The Shawshank Redemption')"><span class="g-name">Drama</span><span
-          class="g-num">06</span></div>
-      <div class="genre-card" onclick="searchByGenre('The Lord of the Rings: The Fellowship of the Ring')"><span
-          class="g-name">Fantasy</span><span class="g-num">07</span></div>
-      <div class="genre-card" onclick="searchByGenre('Get Out')"><span class="g-name">Horror</span><span
-          class="g-num">08</span></div>
-      <div class="genre-card" onclick="searchByGenre('Knives Out')"><span class="g-name">Mystery</span><span
-          class="g-num">09</span></div>
-      <div class="genre-card" onclick="searchByGenre('Eternal Sunshine of the Spotless Mind')"><span
-          class="g-name">Romance</span><span class="g-num">10</span></div>
-      <div class="genre-card" onclick="searchByGenre('Interstellar')"><span class="g-name">Sci-Fi</span><span
-          class="g-num">11</span></div>
-      <div class="genre-card" onclick="searchByGenre('Inception')"><span class="g-name">Thriller</span><span
-          class="g-num">12</span></div>
+      <div class="genre-card" onclick="fetchGenreRecs('action', 'Action')"><span class="g-name">Action</span><span class="g-num">01</span></div>
+      <div class="genre-card" onclick="fetchGenreRecs('animation', 'Animation')"><span class="g-name">Animation</span><span class="g-num">02</span></div>
+      <div class="genre-card" onclick="fetchGenreRecs('comedy', 'Comedy')"><span class="g-name">Comedy</span><span class="g-num">03</span></div>
+      <div class="genre-card" onclick="fetchGenreRecs('crime', 'Crime')"><span class="g-name">Crime</span><span class="g-num">04</span></div>
+      <div class="genre-card" onclick="fetchGenreRecs('documentary', 'Documentary')"><span class="g-name">Documentary</span><span class="g-num">05</span></div>
+      <div class="genre-card" onclick="fetchGenreRecs('drama', 'Drama')"><span class="g-name">Drama</span><span class="g-num">06</span></div>
+      <div class="genre-card" onclick="fetchGenreRecs('fantasy', 'Fantasy')"><span class="g-name">Fantasy</span><span class="g-num">07</span></div>
+      <div class="genre-card" onclick="fetchGenreRecs('horror', 'Horror')"><span class="g-name">Horror</span><span class="g-num">08</span></div>
+      <div class="genre-card" onclick="fetchGenreRecs('mystery', 'Mystery')"><span class="g-name">Mystery</span><span class="g-num">09</span></div>
+      <div class="genre-card" onclick="fetchGenreRecs('romance', 'Romance')"><span class="g-name">Romance</span><span class="g-num">10</span></div>
+      <div class="genre-card" onclick="fetchGenreRecs('scifi', 'Sci-Fi')"><span class="g-name">Sci-Fi</span><span class="g-num">11</span></div>
+      <div class="genre-card" onclick="fetchGenreRecs('thriller', 'Thriller')"><span class="g-name">Thriller</span><span class="g-num">12</span></div>
     </div>
   </div>
 
@@ -247,7 +235,7 @@
         <hr />
       </div>
       <div class="featured">
-        <div class="feat-poster-col">
+        <div class="feat-poster-col" id="feat-poster-col">
           <img id="sel-poster" class="feat-poster-img" src="" alt="poster" />
         </div>
         <div class="feat-body">

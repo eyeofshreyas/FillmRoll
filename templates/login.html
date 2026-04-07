@@ -312,11 +312,82 @@
 
     .login-footer a:hover { color: var(--gold); }
 
+    /* ── mobile brand header (shown only on mobile) ── */
+    .mobile-brand {
+      display: none;
+    }
+
     /* ── responsive ── */
     @media (max-width: 768px) {
-      .page { grid-template-columns: 1fr; }
+      .page {
+        grid-template-columns: 1fr;
+        min-height: 100dvh;
+      }
+
       .left-panel { display: none; }
-      .right-panel { padding: 48px 28px; }
+
+      .right-panel {
+        padding: 48px 24px 40px;
+        padding-top: calc(48px + env(safe-area-inset-top));
+        padding-bottom: calc(40px + env(safe-area-inset-bottom));
+        justify-content: flex-start;
+      }
+
+      .mobile-brand {
+        display: block;
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 1.6rem;
+        font-weight: 300;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--gold);
+        margin-bottom: 32px;
+      }
+
+      .login-box {
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .login-title {
+        font-size: 1.8rem;
+      }
+
+      .login-sub {
+        margin-bottom: 28px;
+      }
+
+      /* larger tap target for Google button */
+      .btn-google {
+        padding: 16px 20px;
+        font-size: 0.95rem;
+        min-height: 52px;
+      }
+
+      .features {
+        gap: 12px;
+        margin-bottom: 28px;
+      }
+
+      .divider {
+        margin: 22px 0;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .right-panel {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+
+      .login-title {
+        font-size: 1.6rem;
+      }
+
+      /* hide features on very small screens to reduce scroll */
+      .features {
+        display: none;
+      }
     }
   </style>
 </head>
@@ -350,7 +421,8 @@
     <div class="right-panel">
       <div class="login-box">
 
-        <div class="login-kicker">Welcome back</div>
+        <div class="mobile-brand">Filmroll</div>
+      <div class="login-kicker">Welcome back</div>
         <h1 class="login-title">Sign in to Filmroll</h1>
         <p class="login-sub">Use your Google account to continue. No password required.</p>
 

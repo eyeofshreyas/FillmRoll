@@ -7,3 +7,4 @@ flask
 authlib
 python-dotenv
 gunicorn
+firebase-admin

@@ -282,8 +282,15 @@ function renderFeatured(sel, results) {
             : `Showing ${results.length} titles similar to "${title}".`;
 
     const img = $('sel-poster');
-    img.src = sel && sel.poster ? sel.poster : '';
-    img.onerror = () => { img.src = 'https://via.placeholder.com/300x450/1c1916/2e2a22?text=No+Image'; };
+    const posterCol = $('feat-poster-col');
+    if (sel && sel.poster) {
+        img.src = sel.poster;
+        img.onerror = () => { img.src = 'https://via.placeholder.com/300x450/1c1916/2e2a22?text=No+Image'; };
+        posterCol.style.display = '';
+    } else {
+        img.src = '';
+        posterCol.style.display = 'none';
+    }
 
     const rat = $('sel-rating');
     rat.innerHTML = sel && sel.rating
@@ -584,20 +591,50 @@ async function doAiSearch() {
    MOOD-BASED RECOMMENDATIONS
 ══════════════════════════════════════════ */
 const MOOD_LABELS = {
-    happy: '😊 Happy', excited: '⚡ Excited', romantic: '💕 Romantic',
-    sad: '😢 Emotional', scared: '😱 Scary', adventurous: '🗺️ Adventurous',
-    curious: '🔍 Curious', chill: '🍃 Chill',
+    happy: 'Happy', excited: 'Excited', romantic: 'Romantic',
+    sad: 'Emotional', scared: 'Scary', adventurous: 'Adventurous',
+    curious: 'Curious', chill: 'Chill',
 };
 
 async function fetchMoodRecs(mood) {
     showResultsPage();
-    const n = parseInt($('num-recs').value);
 
     try {
         const res = await fetch('/mood', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ mood, n }),
+            body: JSON.stringify({ mood, n: 60 }),
+        });
+        const data = await res.json();
+        $('spinner').classList.remove('active');
+
+        if (!data.results || !data.results.length) {
+            showHomeSections(); return;
+        }
+
+        const label = MOOD_LABELS[mood] || mood;
+        const pseudo = {
+            title: `Mood: ${label}`,
+            poster: null,
+            overview: `${data.results.length} top-rated picks ranked by quality & vote credibility — for when you're feeling ${label.toLowerCase()}.`,
+            rating: null,
+        };
+        renderFeatured(pseudo, data.results);
+        renderGrid(data.results);
+    } catch (_) {
+        $('spinner').classList.remove('active');
+        showHomeSections();
+    }
+}
+
+async function fetchGenreRecs(genre, label) {
+    showResultsPage();
+
+    try {
+        const res = await fetch('/genre', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ genre, n: 60 }),
         });
         const data = await res.json();
         $('spinner').classList.remove('active');
@@ -607,9 +644,9 @@ async function fetchMoodRecs(mood) {
         }
 
         const pseudo = {
-            title: `Mood: ${MOOD_LABELS[mood] || mood}`,
+            title: label,
             poster: null,
-            overview: `${data.results.length} picks for when you're feeling ${mood}.`,
+            overview: `${data.results.length} top ${label} films — ranked by rating credibility (vote average × vote confidence).`,
             rating: null,
         };
         renderFeatured(pseudo, data.results);
