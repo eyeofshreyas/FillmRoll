@@ -56,8 +56,8 @@ TMDB_BASE = 'https://api.themoviedb.org/3'
 SEARCH_MULTI_URL = f'{TMDB_BASE}/search/multi'
 
 HF_TOKEN    = os.environ.get('HF_TOKEN', '')
-HF_MODEL    = 'meta-llama/Meta-Llama-3.1-8B-Instruct'
-HF_CHAT_URL = f'https://api-inference.huggingface.co/models/{HF_MODEL}/v1/chat/completions'
+HF_MODEL    = 'meta-llama/Llama-3.1-8B-Instruct'
+HF_CHAT_URL = 'https://router.huggingface.co/v1/chat/completions'
 
 # Load model once at startup
 movies_dict = pickle.load(open('movies_dict.pkl', 'rb'))
