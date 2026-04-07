@@ -625,6 +625,21 @@ def genre_recommend():
     return jsonify({'results': items, 'genre': genre})
 
 
+@app.route('/api/debug-firebase')
+def debug_firebase():
+    import base64
+    import json
+    b64_creds = os.environ.get('FIREBASE_CREDENTIALS_BASE64')
+    if not b64_creds:
+        return jsonify({'status': 'missing', 'message': 'No FIREBASE_CREDENTIALS_BASE64 variable found'})
+    try:
+        b64_creds = b64_creds.strip().strip('"\'')
+        raw = base64.b64decode(b64_creds).decode('utf-8')
+        creds = json.loads(raw)
+        return jsonify({'status': 'ok', 'length': len(b64_creds), 'project': creds.get('project_id')})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e), 'received_length': len(b64_creds)})
+
 @app.route('/rate', methods=['POST'])
 def rate_movie():
     data = request.get_json()
