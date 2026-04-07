@@ -353,7 +353,7 @@ let pendingSearchQuery = '';
 // ── Check Ollama status on load ──
 async function checkOllamaStatus() {
     try {
-        const res = await fetch('/api/ollama-status');
+        const res = await fetch('/api/ai-status');
         const data = await res.json();
         aiOnline = data.available;
     } catch { aiOnline = false; }
@@ -396,7 +396,7 @@ function sendAiMessage() {
 // ── Send prompt ──
 async function sendAiPrompt(text) {
     if (!aiOnline) {
-        appendAiMsg('system-msg', '⚠ Ollama is offline. Start it with: ollama serve');
+        appendAiMsg('system-msg', '⚠ AI service unavailable. Check that HF_TOKEN is set.');
         return;
     }
     if (isStreaming) return;

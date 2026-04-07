@@ -55,10 +55,9 @@ IMG_BASE = 'https://image.tmdb.org/t/p/w500'
 TMDB_BASE = 'https://api.themoviedb.org/3'
 SEARCH_MULTI_URL = f'{TMDB_BASE}/search/multi'
 
-OPEN_BASE="https://openrpunter.com"
-OPEN_API_API="/api/v1/chat/completions"
-OLLAMA_BASE = 'http://localhost:11434'
-LLAMA_MODEL = 'llama3.2'
+HF_TOKEN   = os.environ.get('HF_TOKEN', '')
+HF_MODEL   = 'meta-llama/Meta-Llama-3.1-8B-Instruct'
+HF_CHAT_URL = f'https://api-inference.huggingface.co/models/{HF_MODEL}/v1/chat/completions'
 
 # Load model once at startup
 movies_dict = pickle.load(open('movies_dict.pkl', 'rb'))
@@ -148,17 +147,9 @@ def recommend(movie_title, n=8):
 
 # ── Ollama / Llama helpers ──────────────────────────────────────
 
-def ollama_available():
-    """Check if Ollama server is reachable."""
-    try:
-        r = requests.get(f'{OLLAMA_BASE}/api/tags', timeout=3)
-        if r.status_code == 200:
-            models = [m['name'] for m in r.json().get('models', [])]
-            # Match model name with or without tag suffix
-            return any(m.startswith(LLAMA_MODEL) for m in models)
-        return False
-    except Exception:
-        return False
+def hf_available():
+    """Check if HF token is configured."""
+    return bool(HF_TOKEN)
 
 
 def build_system_prompt(context=None):
@@ -192,30 +183,34 @@ def build_system_prompt(context=None):
     return base
 
 
-def stream_ollama_chat(messages):
-    """Stream chat completion from Ollama, yielding SSE events."""
+def stream_hf_chat(messages):
+    """Stream chat completion from HF Inference API, yielding SSE events."""
     try:
         r = requests.post(
-            f'{OLLAMA_BASE}/api/chat',
-            json={
-                'model': LLAMA_MODEL,
-                'messages': messages,
-                'stream': True,
-            },
+            HF_CHAT_URL,
+            headers={'Authorization': f'Bearer {HF_TOKEN}'},
+            json={'model': HF_MODEL, 'messages': messages, 'stream': True, 'max_tokens': 512},
             stream=True,
-            timeout=120,
+            timeout=60,
         )
 
         for line in r.iter_lines():
-            if line:
-                data = json.loads(line)
-                content = data.get('message', {}).get('content', '')
-                done = data.get('done', False)
+            if not line:
+                continue
+            line = line.decode('utf-8') if isinstance(line, bytes) else line
+            if not line.startswith('data: '):
+                continue
+            chunk = line[6:]
+            if chunk == '[DONE]':
+                yield f"data: {json.dumps({'content': '', 'done': True})}\n\n"
+                break
+            try:
+                data = json.loads(chunk)
+                content = data['choices'][0]['delta'].get('content', '')
                 if content:
                     yield f"data: {json.dumps({'content': content, 'done': False})}\n\n"
-                if done:
-                    yield f"data: {json.dumps({'content': '', 'done': True})}\n\n"
-                    break
+            except Exception:
+                pass
 
     except Exception as e:
         yield f"data: {json.dumps({'content': f'Error: {str(e)}', 'done': True})}\n\n"
@@ -412,18 +407,17 @@ def item_details():
 
 # ── Ollama / AI Endpoints ────────────────────────────────────
 
-@app.route('/api/ollama-status')
-def ollama_status():
-    """Check whether Ollama + the model are available."""
-    available = ollama_available()
-    return jsonify({'available': available, 'model': LLAMA_MODEL})
+@app.route('/api/ai-status')
+def ai_status():
+    """Check whether the HF AI service is configured."""
+    return jsonify({'available': hf_available(), 'model': HF_MODEL})
 
 
 @app.route('/api/chat', methods=['POST'])
 def ai_chat():
-    """Stream a chat response from Llama 3.2 via SSE."""
-    if not ollama_available():
-        return jsonify({'error': 'Ollama is not running or model not found'}), 503
+    """Stream a chat response from Llama 3.1 via HF Inference API SSE."""
+    if not hf_available():
+        return jsonify({'error': 'HF_TOKEN is not configured'}), 503
 
     data = request.get_json()
     user_message = data.get('message', '').strip()
@@ -447,7 +441,7 @@ def ai_chat():
     messages.append({'role': 'user', 'content': user_message})
 
     return Response(
-        stream_with_context(stream_ollama_chat(messages)),
+        stream_with_context(stream_hf_chat(messages)),
         mimetype='text/event-stream',
         headers={
             'Cache-Control': 'no-cache',
@@ -458,16 +452,15 @@ def ai_chat():
 
 @app.route('/api/ai-search', methods=['POST'])
 def ai_search():
-    """Use Llama to interpret a free-text query and find the best matching movie title."""
-    if not ollama_available():
-        return jsonify({'error': 'Ollama is not running'}), 503
+    """Use Llama via HF to interpret a free-text query and find the best matching movie title."""
+    if not hf_available():
+        return jsonify({'error': 'HF_TOKEN is not configured'}), 503
 
     data = request.get_json()
     query = data.get('query', '').strip()
     if not query:
         return jsonify({'error': 'Empty query'}), 400
 
-    # Get a sample of movie titles for Llama to pick from
     all_titles = movies['title'].dropna().tolist()
 
     prompt = (
@@ -481,22 +474,22 @@ def ai_search():
 
     try:
         r = requests.post(
-            f'{OLLAMA_BASE}/api/chat',
+            HF_CHAT_URL,
+            headers={'Authorization': f'Bearer {HF_TOKEN}'},
             json={
-                'model': LLAMA_MODEL,
+                'model': HF_MODEL,
                 'messages': [
                     {'role': 'system', 'content': 'You are a database matching assistant. Reply with only the movie or TV show title.'},
                     {'role': 'user', 'content': prompt},
                 ],
                 'stream': False,
+                'max_tokens': 64,
             },
-            timeout=60,
+            timeout=30,
         )
-        result = r.json()
-        matched_title = result.get('message', {}).get('content', '').strip().strip('"\'')
+        matched_title = r.json()['choices'][0]['message']['content'].strip().strip('"\'')
 
         if matched_title and matched_title != 'NO_MATCH':
-            # Verify it's actually in our dataset
             check = movies[movies['title'].str.lower() == matched_title.lower()]
             if not check.empty:
                 return jsonify({'title': check.iloc[0]['title'], 'found': True})
