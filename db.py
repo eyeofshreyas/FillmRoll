@@ -22,9 +22,16 @@ def init_firebase():
                 b64_creds = b64_creds.strip('"\'')
                 dict_creds = json.loads(base64.b64decode(b64_creds).decode('utf-8'))
                 
-                # FIX: Heroku/env var JSON often double-escapes newlines in the private key.
+                # FIX: Heroku/env var JSON often double-escapes newlines in the private key,
+                # OR users accidentally strip the newlines completely when creating the Base64 string.
                 if 'private_key' in dict_creds:
-                    dict_creds['private_key'] = dict_creds['private_key'].replace('\\n', '\n')
+                    key = dict_creds['private_key']
+                    if '-----BEGIN PRIVATE KEY-----' in key:
+                        middle = key.replace('-----BEGIN PRIVATE KEY-----', '').replace('-----END PRIVATE KEY-----', '')
+                        middle = ''.join(middle.split()) # Strip all whitespace/newlines from the actual payload
+                        # Reconstruct a perfectly compliant PEM format
+                        dict_creds['private_key'] = f"-----BEGIN PRIVATE KEY-----\n{middle}\n-----END PRIVATE KEY-----\n"
+                        
                 
                 cred = credentials.Certificate(dict_creds)
                 firebase_admin.initialize_app(cred)
