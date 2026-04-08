@@ -25,12 +25,10 @@ def init_firebase():
                 firebase_admin.initialize_app(cred)
                 return firestore.client()
             except Exception as e:
-                print(
-                    f"[Firebase] ERROR: {type(e).__name__}: {e} | "
-                    f"Raw prefix: {repr(os.environ.get('FIREBASE_CREDENTIALS_BASE64', '')[:50])}",
-                    file=sys.stderr
+                raise RuntimeError(
+                    f"FATAL FIREBASE ERROR: {type(e).__name__}: {e} | "
+                    f"Prefix: {repr(os.environ.get('FIREBASE_CREDENTIALS_BASE64', '')[:50])}"
                 )
-                return None
 
         # Fallback to local file
         cred_path = os.environ.get('FIREBASE_CREDENTIALS', 'firebase-credentials.json')
