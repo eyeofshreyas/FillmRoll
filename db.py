@@ -30,8 +30,7 @@ def init_firebase():
             firebase_admin.initialize_app(cred)
             return firestore.client()
         else:
-            print("WARNING: Firebase credentials not found. DB calls will be skipped. Ensure you set FIREBASE_CREDENTIALS_BASE64 env var or provide firebase-credentials.json.")
-            return None
+            raise RuntimeError(f"FATAL ERROR ON HEROKU: Firebase credentials not found! b64_creds was: '{b64_creds}'")
     
     return firestore.client()
 
