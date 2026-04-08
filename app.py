@@ -643,14 +643,15 @@ def debug_firebase():
 
 @app.route('/api/test-write')
 def test_write_firebase():
-    import os
-    b64_value = os.environ.get('FIREBASE_CREDENTIALS_BASE64')
-    b64_len = len(b64_value) if b64_value else 0
-    return jsonify({
-        'app_env_len': b64_len,
-        'app_env_type': str(type(b64_value)),
-        'warning': 'We are investigating why db.py thinks this is missing.'
-    })
+    from db import init_firebase
+    try:
+        db = init_firebase()
+        if not db:
+            return jsonify({'error': 'init_firebase() returned None (fallback failed)'})
+        db.collection('users').document('heroku-confirm@test.com').set({'test': 'success!'}, merge=True)
+        return jsonify({'success': True, 'msg': 'Successfully wrote to Firestore on Heroku'})
+    except Exception as e:
+        return jsonify({'error': str(e)})
 
 @app.route('/api/whoami')
 def who_am_i():
