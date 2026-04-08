@@ -40,7 +40,7 @@ def get_user_ratings(email):
     if not db or not email:
         return {}
     try:
-        doc = db.collection('users').document(email).get(timeout=3.0)
+        doc = db.collection('users').document(email).get()
         if doc.exists:
             return doc.to_dict().get('ratings', {})
     except Exception as e:
@@ -55,7 +55,7 @@ def save_user_rating(email, title, rating):
     try:
         db.collection('users').document(email).set({
             'ratings': {title: rating}
-        }, merge=True, timeout=3.0)
+        }, merge=True)
         return True
     except Exception as e:
         print(f"Firebase write error: {e}")
@@ -69,7 +69,7 @@ def save_last_mood(email, mood):
     try:
         db.collection('users').document(email).set({
             'last_mood': mood
-        }, merge=True, timeout=3.0)
+        }, merge=True)
         return True
     except Exception as e:
         print(f"Firebase write error: {e}")
