@@ -28,6 +28,7 @@ def init_firebase():
                     key = dict_creds['private_key']
                     if '-----BEGIN PRIVATE KEY-----' in key:
                         middle = key.replace('-----BEGIN PRIVATE KEY-----', '').replace('-----END PRIVATE KEY-----', '')
+                        middle = middle.replace('\\n', '').replace('\n', '')
                         middle = ''.join(middle.split()) # Strip all whitespace/newlines from the actual payload
                         # Chunk into 64 character lines to strictly comply with PEM standards
                         chunks = [middle[i:i+64] for i in range(0, len(middle), 64)]
