@@ -640,6 +640,19 @@ def debug_firebase():
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e), 'received_length': len(b64_creds)})
 
+@app.route('/api/test-write')
+def test_write_firebase():
+    from db import init_firebase
+    db = init_firebase()
+    if not db:
+        return jsonify({'error': 'init_firebase() returned None'})
+    try:
+        db.collection('users').document('debug-heroku@test.com').set({'test': 'write'}, merge=True)
+        return jsonify({'success': True})
+    except Exception as e:
+        import traceback
+        return jsonify({'error': str(e), 'trace': traceback.format_exc()})
+
 @app.route('/rate', methods=['POST'])
 def rate_movie():
     data = request.get_json()
