@@ -20,7 +20,8 @@ def init_firebase():
                 firebase_admin.initialize_app(cred)
                 return firestore.client()
             except Exception as e:
-                print(f"Error loading base64 Firebase creds: {e}")
+                # Stop hiding the error!
+                raise RuntimeError(f"Error loading base64 Firebase creds: {e}")
 
         # Fallback to local file
         cred_path = os.environ.get('FIREBASE_CREDENTIALS', 'firebase-credentials.json')
