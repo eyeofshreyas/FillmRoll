@@ -21,6 +21,11 @@ def init_firebase():
                 b64_creds = ''.join(b64_creds.split())
                 b64_creds = b64_creds.strip('"\'')
                 dict_creds = json.loads(base64.b64decode(b64_creds).decode('utf-8'))
+                
+                # FIX: Heroku/env var JSON often double-escapes newlines in the private key.
+                if 'private_key' in dict_creds:
+                    dict_creds['private_key'] = dict_creds['private_key'].replace('\\n', '\n')
+                
                 cred = credentials.Certificate(dict_creds)
                 firebase_admin.initialize_app(cred)
                 return firestore.client()
