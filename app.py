@@ -641,25 +641,6 @@ def debug_firebase():
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e), 'received_length': len(b64_creds)})
 
-@app.route('/api/test-write')
-def test_write_firebase():
-    from db import init_firebase
-    try:
-        db = init_firebase()
-        if not db:
-            return jsonify({'error': 'init_firebase() returned None (fallback failed)'})
-        db.collection('users').document('heroku-confirm@test.com').set({'test': 'success!'}, merge=True)
-        return jsonify({'success': True, 'msg': 'Successfully wrote to Firestore on Heroku'})
-    except Exception as e:
-        return jsonify({'error': str(e)})
-
-@app.route('/api/whoami')
-def who_am_i():
-    return jsonify({
-        'session_user': session.get('user'),
-        'has_cookie': bool(request.cookies)
-    })
-
 @app.route('/rate', methods=['POST'])
 def rate_movie():
     data = request.get_json()
