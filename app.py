@@ -642,16 +642,14 @@ def debug_firebase():
 
 @app.route('/api/test-write')
 def test_write_firebase():
-    from db import init_firebase
-    db = init_firebase()
-    if not db:
-        return jsonify({'error': 'init_firebase() returned None'})
-    try:
-        db.collection('users').document('debug-heroku@test.com').set({'test': 'write'}, merge=True)
-        return jsonify({'success': True})
-    except Exception as e:
-        import traceback
-        return jsonify({'error': str(e), 'trace': traceback.format_exc()})
+    import os
+    b64_value = os.environ.get('FIREBASE_CREDENTIALS_BASE64')
+    b64_len = len(b64_value) if b64_value else 0
+    return jsonify({
+        'app_env_len': b64_len,
+        'app_env_type': str(type(b64_value)),
+        'warning': 'We are investigating why db.py thinks this is missing.'
+    })
 
 @app.route('/rate', methods=['POST'])
 def rate_movie():
