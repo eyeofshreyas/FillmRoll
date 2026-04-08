@@ -29,8 +29,11 @@ def init_firebase():
                     if '-----BEGIN PRIVATE KEY-----' in key:
                         middle = key.replace('-----BEGIN PRIVATE KEY-----', '').replace('-----END PRIVATE KEY-----', '')
                         middle = ''.join(middle.split()) # Strip all whitespace/newlines from the actual payload
+                        # Chunk into 64 character lines to strictly comply with PEM standards
+                        chunks = [middle[i:i+64] for i in range(0, len(middle), 64)]
+                        formatted_middle = '\n'.join(chunks)
                         # Reconstruct a perfectly compliant PEM format
-                        dict_creds['private_key'] = f"-----BEGIN PRIVATE KEY-----\n{middle}\n-----END PRIVATE KEY-----\n"
+                        dict_creds['private_key'] = f"-----BEGIN PRIVATE KEY-----\n{formatted_middle}\n-----END PRIVATE KEY-----\n"
                         
                 
                 cred = credentials.Certificate(dict_creds)
