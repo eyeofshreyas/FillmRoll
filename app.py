@@ -633,7 +633,8 @@ def debug_firebase():
     if not b64_creds:
         return jsonify({'status': 'missing', 'message': 'No FIREBASE_CREDENTIALS_BASE64 variable found'})
     try:
-        b64_creds = b64_creds.strip().strip('"\'')
+        b64_creds = ''.join(b64_creds.split())
+        b64_creds = b64_creds.strip('"\'')
         raw = base64.b64decode(b64_creds).decode('utf-8')
         creds = json.loads(raw)
         return jsonify({'status': 'ok', 'length': len(b64_creds), 'project': creds.get('project_id')})
@@ -649,6 +650,13 @@ def test_write_firebase():
         'app_env_len': b64_len,
         'app_env_type': str(type(b64_value)),
         'warning': 'We are investigating why db.py thinks this is missing.'
+    })
+
+@app.route('/api/whoami')
+def who_am_i():
+    return jsonify({
+        'session_user': session.get('user'),
+        'has_cookie': bool(request.cookies)
     })
 
 @app.route('/rate', methods=['POST'])

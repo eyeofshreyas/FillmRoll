@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import base64
 import firebase_admin
@@ -14,14 +15,22 @@ def init_firebase():
         b64_creds = os.environ.get('FIREBASE_CREDENTIALS_BASE64')
         if b64_creds:
             try:
-                b64_creds = b64_creds.strip().strip('"\'')
+                # ''.join(...split()) removes ALL embedded whitespace (\n, \r, \t, spaces)
+                # that appear when copy-pasting base64 into Heroku config vars.
+                # Plain .strip() only handles leading/trailing whitespace.
+                b64_creds = ''.join(b64_creds.split())
+                b64_creds = b64_creds.strip('"\'')
                 dict_creds = json.loads(base64.b64decode(b64_creds).decode('utf-8'))
                 cred = credentials.Certificate(dict_creds)
                 firebase_admin.initialize_app(cred)
                 return firestore.client()
             except Exception as e:
-                # Stop hiding the error!
-                raise RuntimeError(f"Error loading base64 Firebase creds: {e}")
+                print(
+                    f"[Firebase] ERROR: {type(e).__name__}: {e} | "
+                    f"Raw prefix: {repr(os.environ.get('FIREBASE_CREDENTIALS_BASE64', '')[:50])}",
+                    file=sys.stderr
+                )
+                return None
 
         # Fallback to local file
         cred_path = os.environ.get('FIREBASE_CREDENTIALS', 'firebase-credentials.json')
@@ -30,7 +39,8 @@ def init_firebase():
             firebase_admin.initialize_app(cred)
             return firestore.client()
         else:
-            raise RuntimeError(f"FATAL ERROR ON HEROKU: Firebase credentials not found! b64_creds was: '{b64_creds}'")
+            print("[Firebase] WARNING: No credentials found. Set FIREBASE_CREDENTIALS_BASE64 env var.", file=sys.stderr)
+            return None
     
     return firestore.client()
 
