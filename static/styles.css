@@ -2298,6 +2298,12 @@
     height: 32px;
     border-radius: 6px;
     object-fit: cover;
+    transition: transform 0.15s, opacity 0.15s;
+}
+
+a:has(.provider-logo):hover .provider-logo {
+    transform: scale(1.12);
+    opacity: 0.85;
 }
 
 .provider-unavailable {

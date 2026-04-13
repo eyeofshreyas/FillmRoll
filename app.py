@@ -415,6 +415,7 @@ def item_details():
     if region is None:
         region = all_regions.get('US') or {}
     watch_providers = {
+        'link': region.get('link', ''),
         'flatrate': [
             {'provider_name': p['provider_name'],
              'logo_path': LOGO_BASE + p['logo_path'] if p.get('logo_path') else None}

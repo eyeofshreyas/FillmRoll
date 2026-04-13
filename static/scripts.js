@@ -174,6 +174,7 @@ async function openModal(data) {
         // providers
         if (det.watch_providers) {
             const groups = $('providers-groups');
+            const jwLink = det.watch_providers.link || '';
             const labels = { flatrate: 'Stream', rent: 'Rent', buy: 'Buy' };
             let hasAny = false;
             ['flatrate', 'rent', 'buy'].forEach(type => {
@@ -182,7 +183,10 @@ async function openModal(data) {
                 hasAny = true;
                 const group = document.createElement('div');
                 group.className = 'provider-group';
-                group.innerHTML = `<span class="provider-type-label">${labels[type]}</span>`;
+                const typeLabel = document.createElement('span');
+                typeLabel.className = 'provider-type-label';
+                typeLabel.textContent = labels[type];
+                group.appendChild(typeLabel);
                 list.forEach(p => {
                     const img = document.createElement('img');
                     img.src = p.logo_path || '';
@@ -190,7 +194,16 @@ async function openModal(data) {
                     img.title = p.provider_name;
                     img.className = 'provider-logo';
                     img.onerror = () => img.style.display = 'none';
-                    group.appendChild(img);
+                    if (jwLink) {
+                        const a = document.createElement('a');
+                        a.href = jwLink;
+                        a.target = '_blank';
+                        a.rel = 'noopener noreferrer';
+                        a.appendChild(img);
+                        group.appendChild(a);
+                    } else {
+                        group.appendChild(img);
+                    }
                 });
                 groups.appendChild(group);
             });
