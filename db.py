@@ -98,3 +98,52 @@ def save_last_mood(email, mood):
     except Exception as e:
         print(f"Firebase write error: {e}")
         return False
+
+def get_watchlist(email):
+    """Return watchlist as a list of item dicts, sorted newest-first."""
+    db = init_firebase()
+    if not db or not email:
+        return []
+    try:
+        doc = db.collection('users').document(email).get()
+        if doc.exists:
+            wl = doc.to_dict().get('watchlist', {})
+            items = list(wl.values())
+            items.sort(key=lambda x: x.get('added_at', ''), reverse=True)
+            return items
+    except Exception as e:
+        print(f"Firebase watchlist read error: {e}")
+    return []
+
+
+def add_to_watchlist(email, item):
+    """Add a movie to the watchlist map, keyed by str(movie_id)."""
+    db = init_firebase()
+    if not db or not email:
+        return False
+    try:
+        key = str(item['movie_id'])
+        db.collection('users').document(email).set(
+            {'watchlist': {key: item}}, merge=True
+        )
+        return True
+    except Exception as e:
+        print(f"Firebase watchlist add error: {e}")
+        return False
+
+
+def remove_from_watchlist(email, movie_id):
+    """Remove a movie from the watchlist map by movie_id."""
+    db = init_firebase()
+    if not db or not email:
+        return False
+    try:
+        from google.cloud import firestore as _fs
+        key = f'watchlist.{movie_id}'
+        db.collection('users').document(email).update(
+            {key: _fs.DELETE_FIELD}
+        )
+        return True
+    except Exception as e:
+        print(f"Firebase watchlist remove error: {e}")
+        return False

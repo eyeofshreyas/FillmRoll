@@ -11,7 +11,8 @@ from authlib.integrations.flask_client import OAuth
 from dotenv import load_dotenv
 load_dotenv()
 
-from db import get_user_ratings, save_user_rating, save_last_mood
+from db import (get_user_ratings, save_user_rating, save_last_mood,
+                get_watchlist, add_to_watchlist, remove_from_watchlist)
 
 # ── Download similarity matrix from Hugging Face if not present ──
 def download_similarity():
