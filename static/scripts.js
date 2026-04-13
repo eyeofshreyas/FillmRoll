@@ -267,6 +267,8 @@ function setActiveNav(id) {
 
 function showHomeSections() {
     $('results-page').style.display = 'none';
+    const wlPage = $('watchlist-page');
+    if (wlPage) wlPage.style.display = 'none';
     $('hero-section').style.display = '';
     $('trending-section').style.display = '';
     $('mood-section').style.display = '';
@@ -280,6 +282,8 @@ function showResultsPage() {
     $('mood-section').style.display = 'none';
     $('genre-section').style.display = 'none';
     document.querySelectorAll('.home-spacer').forEach(s => s.style.display = 'none');
+    const wlPage = $('watchlist-page');
+    if (wlPage) wlPage.style.display = 'none';
     setActiveNav('');
     $('results-page').style.display = 'block';
     $('spinner').classList.add('active');
@@ -801,7 +805,8 @@ loadUserRatings();
 /* ══════════════════════════════════════════
    WATCHLIST
 ══════════════════════════════════════════ */
-let watchlistIds = new Set();  // Set of movie_id numbers for O(1) lookup
+let watchlistIds = new Set();      // Set of movie_id numbers for O(1) lookup
+let _watchlistAnimTimers = [];     // track staggered animation timers for cleanup
 
 async function loadWatchlist() {
     try {
@@ -830,11 +835,12 @@ async function toggleWatchlist() {
           };
 
     try {
-        await fetch(url, {
+        const resp = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),
         });
+        if (!resp.ok) return;
         if (inList) {
             watchlistIds.delete(id);
         } else {
@@ -885,26 +891,49 @@ async function showWatchlist() {
 
         $('watchlist-count').textContent = `${items.length} title${items.length !== 1 ? 's' : ''}`;
         const grid = $('watchlist-grid');
+        _watchlistAnimTimers.forEach(clearTimeout);
+        _watchlistAnimTimers = [];
         items.forEach((r, i) => {
             const card = document.createElement('div');
             card.className = 'card';
-            card.innerHTML = `
-            <div class="poster-wrap">
-              <img src="${r.poster}" alt="${r.title}" loading="lazy"
-                   onerror="this.src='https://via.placeholder.com/300x450/1c1916/2e2a22?text=No+Poster'"/>
-              <div class="card-overlay">
-                <h4>${r.title}</h4>
-                <div class="meta-row">
-                  <span class="c-star">&#9733; ${r.rating}</span>
-                </div>
-              </div>
-              <div class="card-hover-overlay">
-                <div class="hover-cta">View details &rarr;</div>
-              </div>
-            </div>`;
+
+            const wrap = document.createElement('div');
+            wrap.className = 'poster-wrap';
+
+            const img = document.createElement('img');
+            img.loading = 'lazy';
+            img.src = r.poster || '';
+            img.alt = r.title || '';
+            img.onerror = () => { img.src = 'https://via.placeholder.com/300x450/1c1916/2e2a22?text=No+Poster'; };
+
+            const overlay = document.createElement('div');
+            overlay.className = 'card-overlay';
+            const h4 = document.createElement('h4');
+            h4.textContent = r.title || '';
+            const metaRow = document.createElement('div');
+            metaRow.className = 'meta-row';
+            const star = document.createElement('span');
+            star.className = 'c-star';
+            star.textContent = `★ ${r.rating}`;
+            metaRow.appendChild(star);
+            overlay.appendChild(h4);
+            overlay.appendChild(metaRow);
+
+            const hoverOverlay = document.createElement('div');
+            hoverOverlay.className = 'card-hover-overlay';
+            const cta = document.createElement('div');
+            cta.className = 'hover-cta';
+            cta.textContent = 'View details →';
+            hoverOverlay.appendChild(cta);
+
+            wrap.appendChild(img);
+            wrap.appendChild(overlay);
+            wrap.appendChild(hoverOverlay);
+            card.appendChild(wrap);
+
             card.addEventListener('click', () => openModal(r));
             grid.appendChild(card);
-            setTimeout(() => card.classList.add('show'), i * 55);
+            _watchlistAnimTimers.push(setTimeout(() => card.classList.add('show'), i * 55));
         });
     } catch (_) {
         $('watchlist-spinner').style.display = 'none';
