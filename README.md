@@ -1,54 +1,60 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.13-blue?logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white" />
   <img src="https://img.shields.io/badge/Flask-Web_App-black?logo=flask" />
+  <img src="https://img.shields.io/badge/Firebase-Firestore-FFCA28?logo=firebase&logoColor=black" />
   <img src="https://img.shields.io/badge/TMDB-API-01d277?logo=themoviedatabase&logoColor=white" />
-  <img src="https://img.shields.io/badge/Llama_3.2-AI_Chat-blueviolet?logo=meta&logoColor=white" />
+  <img src="https://img.shields.io/badge/Llama_3.1-AI_Chat-blueviolet?logo=huggingface&logoColor=white" />
+  <img src="https://img.shields.io/badge/Google-OAuth2-4285F4?logo=google&logoColor=white" />
 </p>
 
-# 🎬 FilmRoll — Movie Recommendation System
+# 🎬 FilmRoll — AI Movie Recommendation System
 
-A **content-based movie recommendation engine** with a cinematic dark-themed web UI, live TMDB data, and an optional **Llama 3.2 AI chat assistant** for natural-language movie discovery.
+FilmRoll is a modern, full-stack movie recommendation engine featuring a cinematic dark-themed web UI. It goes beyond simple recommendations by offering **Collaborative Filtering**, **Google OAuth**, **Firebase Cloud Storage**, and a **Llama 3.1 AI Chat Assistant** powered by Hugging Face to help you discover your next favorite movie.
 
 ---
 
 ## ✨ Features
 
-| Feature | Description |
-|---|---|
-| **Content-Based Filtering** | Recommends movies using TF-IDF vectorisation & cosine similarity on genres, cast, crew, keywords, and overview |
-| **Cinematic UI** | Dark-themed, responsive frontend with smooth animations, hover effects, and a hero landing page |
-| **Trending Carousel** | Displays weekly trending movies fetched live from the TMDB API |
-| **Genre Browsing** | Quick genre grid for instant discovery |
-| **Movie Details Modal** | Trailers (YouTube), cast list, runtime, genres, and taglines — all from TMDB |
-| **AI Chat (Optional)** | Context-aware movie assistant powered by Llama 3.2 via Ollama |
-| **AI Search Fallback** | Describe a movie in plain English and the AI finds the closest match in the database |
+- **Personal Watchlists & Streaming Providers** — Save movies to your personal watchlist and instantly see *where* you can stream them (Netflix, Hulu, Prime Video, etc.) without leaving the app.
+- **Collaborative Filtering & Content-Based ML** — Recommends movies using a hybrid approach. It utilizes TF-IDF vectorization/cosine similarity for content matching, combined with user ratings from your active session.
+- **Google OAuth Authentication** — Seamless and secure Single Sign-On (SSO) utilizing `authlib` to manage user sessions.
+- **Firebase Firestore Integration** — Persistently stores user ratings and mood history across sessions using a robust NoSQL cloud database.
+- **Llama 3.1 AI Chat Assistant** — Context-aware movie assistant powered by the Hugging Face Inference API. Describe a movie in plain English, and the AI will find the closest match.
+- **Automatic Matrix Download** — The application automatically fetches the hefty mathematical similarity matrix from the Hugging Face Hub on startup, saving you local storage space and setup time.
+- **Cinematic UI** — Dark-themed, responsive frontend with smooth animations, hover effects, a hero landing page, and a trending carousel.
+- **Movie Details Modal** — Watch YouTube trailers, browse the cast list, check runtime, genres, and taglines — all fetched live from the TMDB API.
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Backend** — Python, Flask
-- **ML/NLP** — scikit-learn (CountVectorizer, cosine similarity), NLTK (Porter Stemmer)
-- **Data** — pandas, NumPy, pickle (pre-computed similarity matrix)
-- **API** — [TMDB API v3](https://developers.themoviedb.org/3) for posters, trailers, cast, and trending data
-- **AI** — Llama 3.2 via [Ollama](https://ollama.com/) (optional)
-- **Frontend** — HTML, CSS (vanilla), JavaScript
+- **Backend Framework** — Python, Flask, Gunicorn
+- **Database / Auth** — Google Firebase Admin SDK (Firestore), Google OAuth 2.0
+- **Machine Learning & NLP** — scikit-learn (CountVectorizer, Cosine Similarity), NLTK (Porter Stemmer), Pandas, NumPy
+- **External APIs** — [TMDB API v3](https://developers.themoviedb.org/3) for live posters, streaming providers, and trailers. 
+- **AI / LLM** — `meta-llama/Llama-3.1-8B-Instruct` via the [Hugging Face Serverless Inference API](https://huggingface.co/docs/api-inference)
+- **Frontend** — HTML5, CSS3 (Vanilla + Animations), JavaScript
 
 ---
 
 ## 📂 Project Structure
 
+```text
+FillmRoll/
+├── app.py                          # Main Flask application, API endpoints, and Auth integration
+├── db.py                           # Firebase initialization and database operations
+├── requirements.txt                # Python dependencies for deployment
+├── Procfile / runtime.txt          # Heroku deployment configuration files
+├── movie-recommender-system.ipynb  # Jupyter notebook covering model creation and ML logic
+├── static/
+│   ├── styles.css                  # UI styling, responsive design, dark mode aesthetics
+│   └── scripts.js                  # Frontend logic (modals, TMDB fetching, Watchlist, AI Chat)
+└── templates/
+    ├── index.html                  # Main application interface
+    └── login.html                  # Google OAuth login landing page
 ```
-MOVIE RECOMMENDATION SYSTEM/
-├── app.py                          # Flask application (routes, recommendation logic, AI endpoints)
-├── movie-recommender-system.ipynb  # Jupyter notebook to build the model from scratch
-├── movies_dict.pkl                 # Pre-computed movie metadata (title, overview, poster, rating)
-├── similarity.pkl                  # Pre-computed cosine similarity matrix
-├── requirements.txt                # Python dependencies
-├── templates/
-│   └── index.html                  # Full frontend (HTML + CSS + JS)
-└── README.md
-```
+
+> **Note**: `movies_dict.pkl` and `similarity.pkl` are required for ML functionality. `similarity.pkl` is automatically downloaded from the cloud on the first run.
 
 ---
 
@@ -57,70 +63,65 @@ MOVIE RECOMMENDATION SYSTEM/
 ### Prerequisites
 
 - Python 3.10+
-- A [TMDB API key](https://www.themoviedb.org/settings/api) (one is already embedded for demo purposes)
-- *(Optional)* [Ollama](https://ollama.com/) with `llama3.2` pulled for AI chat
+- A Google Cloud Platform (GCP) Project with OAuth credentials.
+- A Firebase Project with Firestore enabled.
+- Hugging Face Access Token.
+- *(Note: A TMDB API key is currently embedded in the code for demonstration).*
 
-### Installation
+### 1. Environment Variables Setup
+
+Create a `.env` file in the root directory and add the following keys:
+
+```env
+FLASK_SECRET=your_secure_flask_secret_key
+GOOGLE_CLIENT_ID=your_google_oauth_client_id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
+FIREBASE_CREDENTIALS_BASE64=base64_encoded_version_of_your_firebase_service_account_json
+HF_TOKEN=hf_your_huggingface_access_token
+```
+
+### 2. Installation & Running Locally
 
 ```bash
-# 1. Clone the repo
+# Clone the repository
 git clone https://github.com/shreyass0007/FillmRoll.git
 cd FillmRoll
 
-# 2. Create a virtual environment
+# Create and activate a virtual environment
 python -m venv .venv
-.venv\Scripts\activate        # Windows
-# source .venv/bin/activate   # macOS / Linux
+# On Windows:
+.venv\Scripts\activate
+# On macOS/Linux:
+source .venv/bin/activate
 
-# 3. Install dependencies
+# Install required dependencies
 pip install -r requirements.txt
 
-# 4. Run the app
+# Start the Flask application
 python app.py
 ```
 
-The app will start at **http://127.0.0.1:5000**.
-
-### (Optional) Enable AI Chat
-
-```bash
-# Install Ollama from https://ollama.com
-ollama pull llama3.2
-ollama serve                   # keep running in background
-```
-
-The app auto-detects Ollama at startup and enables the chat panel.
+The app will download the required similarity matrices and start a server at **http://127.0.0.1:5000**. 
 
 ---
 
-## 🔬 How It Works
+## ☁️ Deployment (Heroku)
 
-### Model Pipeline (`movie-recommender-system.ipynb`)
+This application is configured for easy deployment on Heroku. The included `Procfile` uses `gunicorn` as the web server, and `runtime.txt` specifies Python 3.12.9.
 
-```
-TMDB API → Fetch movies (popular, top-rated, now-playing)
-         → Fetch details, credits, keywords per movie
-         → Clean & preprocess data
-         → Build weighted tags (genres ×3, director ×3, cast ×2, keywords ×2, overview ×1)
-         → Porter Stemming
-         → CountVectorizer (5 000 features)
-         → Cosine Similarity Matrix
-         → Export → movies_dict.pkl + similarity.pkl
-```
-
-### Web App (`app.py`)
-
-1. Loads pre-computed pickle files at startup
-2. User selects or searches for a movie
-3. Backend finds the top-N most similar movies via the similarity matrix
-4. TMDB API enriches results with live posters, trailers, and cast data
-5. *(Optional)* AI chat provides conversational movie recommendations
+1. Create a new Heroku app.
+2. Add all of the `.env` variables from Step 1 to your Heroku **Config Vars** in the dashboard.
+3. Push your code to the Heroku remote:
+   ```bash
+   git push heroku main
+   ```
+4. *Important:* Due to the size of the similarity matrix downloading on the first boot, you may need to increase the Heroku boot timeout window via the Heroku CLI if you run into `R10` errors.
 
 ---
 
-## 📸 Screenshots
+## 📸 Experience the App
 
-> Run the app locally to experience the full cinematic UI — hero section, trending carousel, genre grid, recommendation cards with hover overlays, and the movie detail modal with embedded trailers.
+> Start the app, log in with Google, and experience the full cinematic UI. Try asking the AI bot, "Find me a movie about a bank heist that goes wrong", save movies to your watchlist, and rate your favorites to improve the Collaborative Filtering results.
 
 ---
 
@@ -130,7 +131,7 @@ TMDB API → Fetch movies (popular, top-rated, now-playing)
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+5. Open a Pull Request on GitHub.
 
 ---
 
@@ -138,8 +139,6 @@ TMDB API → Fetch movies (popular, top-rated, now-playing)
 
 This project is open-source and available under the [MIT License](LICENSE).
 
----
-
 <p align="center">
-  Built with ❤️ using Flask, TMDB & Llama 3.2
+  Built with ❤️ using Flask, TMDB, Firebase & Llama 3.1
 </p>
