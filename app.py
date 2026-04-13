@@ -274,7 +274,7 @@ def google_callback():
 
 @app.route('/logout')
 def logout():
-    session.pop('user', None)
+    session.clear()
     return redirect(url_for('login_page'))
 
 
@@ -760,9 +760,13 @@ def watchlist_add():
     title = data.get('title', '')
     if not movie_id or not title:
         return jsonify({'error': 'movie_id and title are required'}), 400
+    try:
+        movie_id = int(movie_id)
+    except (TypeError, ValueError):
+        return jsonify({'error': 'movie_id must be an integer'}), 400
 
     item = {
-        'movie_id':   int(movie_id),
+        'movie_id':   movie_id,
         'title':      title,
         'poster':     data.get('poster', ''),
         'media_type': data.get('media_type', 'movie'),
@@ -776,7 +780,7 @@ def watchlist_add():
             app.logger.warning('Firestore watchlist add failed for %s', user_email)
 
     wl = session.get('watchlist', [])
-    wl = [m for m in wl if m.get('movie_id') != int(movie_id)]
+    wl = [m for m in wl if m.get('movie_id') != movie_id]
     wl.insert(0, item)
     session['watchlist'] = wl
     session.modified = True
@@ -791,13 +795,17 @@ def watchlist_remove():
     movie_id = data.get('movie_id')
     if not movie_id:
         return jsonify({'error': 'movie_id is required'}), 400
+    try:
+        movie_id = int(movie_id)
+    except (TypeError, ValueError):
+        return jsonify({'error': 'movie_id must be an integer'}), 400
 
     user_email = session.get('user', {}).get('email')
     if user_email:
         remove_from_watchlist(user_email, str(movie_id))
 
     wl = session.get('watchlist', [])
-    wl = [m for m in wl if m.get('movie_id') != int(movie_id)]
+    wl = [m for m in wl if m.get('movie_id') != movie_id]
     session['watchlist'] = wl
     session.modified = True
 

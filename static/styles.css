@@ -2321,7 +2321,7 @@
 
 .btn-bookmark:hover {
     border-color: var(--text2);
-    color: var(--text1);
+    color: var(--text);
 }
 
 /* ── Watchlist page ── */
