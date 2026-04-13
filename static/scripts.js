@@ -108,7 +108,12 @@ async function openModal(data) {
         const res = await fetch('/details', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ movie_id: data.movie_id, title: data.title, media_type: data.media_type }),
+            body: JSON.stringify({
+                movie_id:   data.movie_id,
+                title:      data.title,
+                media_type: data.media_type,
+                country:    (navigator.language.split('-')[1] || 'US').toUpperCase(),
+            }),
         });
         const det = await res.json();
 
@@ -164,6 +169,37 @@ async function openModal(data) {
                 row.appendChild(el);
             });
             $('modal-cast').style.display = 'block';
+        }
+
+        // providers
+        if (det.watch_providers) {
+            const groups = $('providers-groups');
+            const labels = { flatrate: 'Stream', rent: 'Rent', buy: 'Buy' };
+            let hasAny = false;
+            ['flatrate', 'rent', 'buy'].forEach(type => {
+                const list = det.watch_providers[type] || [];
+                if (!list.length) return;
+                hasAny = true;
+                const group = document.createElement('div');
+                group.className = 'provider-group';
+                group.innerHTML = `<span class="provider-type-label">${labels[type]}</span>`;
+                list.forEach(p => {
+                    const img = document.createElement('img');
+                    img.src = p.logo_path || '';
+                    img.alt = p.provider_name;
+                    img.title = p.provider_name;
+                    img.className = 'provider-logo';
+                    img.onerror = () => img.style.display = 'none';
+                    group.appendChild(img);
+                });
+                groups.appendChild(group);
+            });
+            if (hasAny) {
+                $('modal-providers').style.display = 'block';
+            } else {
+                groups.innerHTML = '<span class="provider-unavailable">Not available for streaming in your region.</span>';
+                $('modal-providers').style.display = 'block';
+            }
         }
     } catch (_) {
         $('modal-trailer').innerHTML = `<div class="no-trailer">Could not load details</div>`;
@@ -711,6 +747,10 @@ openModal = async function (data) {
     currentModalMovie = data;
     highlightStars(userRatings[data.title] || 0);
     $('rate-msg').textContent = '';
+    // Reset providers section
+    $('modal-providers').style.display = 'none';
+    $('providers-groups').innerHTML = '';
+    updateBookmarkIcon();
     await _origOpenModal(data);
 };
 
@@ -757,3 +797,117 @@ async function loadUserRatings() {
     } catch (_) { }
 }
 loadUserRatings();
+
+/* ══════════════════════════════════════════
+   WATCHLIST
+══════════════════════════════════════════ */
+let watchlistIds = new Set();  // Set of movie_id numbers for O(1) lookup
+
+async function loadWatchlist() {
+    try {
+        const res = await fetch('/watchlist');
+        const items = await res.json();
+        watchlistIds = new Set(items.map(m => m.movie_id));
+    } catch (_) { }
+}
+loadWatchlist();
+
+async function toggleWatchlist() {
+    if (!currentModalMovie) return;
+    const id = currentModalMovie.movie_id;
+    if (!id) return;
+
+    const inList = watchlistIds.has(id);
+    const url = inList ? '/watchlist/remove' : '/watchlist/add';
+    const body = inList
+        ? { movie_id: id }
+        : {
+            movie_id:   id,
+            title:      currentModalMovie.title,
+            poster:     currentModalMovie.poster,
+            media_type: currentModalMovie.media_type || 'movie',
+            rating:     currentModalMovie.rating || 0,
+          };
+
+    try {
+        await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        if (inList) {
+            watchlistIds.delete(id);
+        } else {
+            watchlistIds.add(id);
+        }
+        updateBookmarkIcon();
+    } catch (_) { }
+}
+
+function updateBookmarkIcon() {
+    const icon = $('bookmark-icon');
+    const btn = $('modal-bookmark');
+    if (!icon || !btn || !currentModalMovie) return;
+    const filled = watchlistIds.has(currentModalMovie.movie_id);
+    icon.setAttribute('fill', filled ? 'currentColor' : 'none');
+    btn.setAttribute('aria-pressed', String(filled));
+    btn.setAttribute('aria-label', filled ? 'Remove from watchlist' : 'Add to watchlist');
+}
+
+async function showWatchlist() {
+    // Hide all home sections and results page
+    $('hero-section').style.display = 'none';
+    $('trending-section').style.display = 'none';
+    $('mood-section').style.display = 'none';
+    $('genre-section').style.display = 'none';
+    $('results-page').style.display = 'none';
+    document.querySelectorAll('.home-spacer').forEach(s => s.style.display = 'none');
+    setActiveNav('');
+
+    const page = $('watchlist-page');
+    page.style.display = 'block';
+    $('watchlist-grid').innerHTML = '';
+    $('watchlist-empty').style.display = 'none';
+    $('watchlist-spinner').style.display = 'block';
+
+    try {
+        const res = await fetch('/watchlist');
+        const items = await res.json();
+        $('watchlist-spinner').style.display = 'none';
+
+        watchlistIds = new Set(items.map(m => m.movie_id));
+
+        if (!items.length) {
+            $('watchlist-empty').style.display = 'block';
+            $('watchlist-count').textContent = '';
+            return;
+        }
+
+        $('watchlist-count').textContent = `${items.length} title${items.length !== 1 ? 's' : ''}`;
+        const grid = $('watchlist-grid');
+        items.forEach((r, i) => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+            <div class="poster-wrap">
+              <img src="${r.poster}" alt="${r.title}" loading="lazy"
+                   onerror="this.src='https://via.placeholder.com/300x450/1c1916/2e2a22?text=No+Poster'"/>
+              <div class="card-overlay">
+                <h4>${r.title}</h4>
+                <div class="meta-row">
+                  <span class="c-star">&#9733; ${r.rating}</span>
+                </div>
+              </div>
+              <div class="card-hover-overlay">
+                <div class="hover-cta">View details &rarr;</div>
+              </div>
+            </div>`;
+            card.addEventListener('click', () => openModal(r));
+            grid.appendChild(card);
+            setTimeout(() => card.classList.add('show'), i * 55);
+        });
+    } catch (_) {
+        $('watchlist-spinner').style.display = 'none';
+        $('watchlist-empty').style.display = 'block';
+    }
+}
