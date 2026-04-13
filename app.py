@@ -406,12 +406,36 @@ def item_details():
         runtime = run_times[0] if run_times else None
     tagline = detail.get('tagline', '')
 
+    # ── Watch Providers ───────────────────────────────────────
+    country = data.get('country', 'US').upper()
+    providers_data = tmdb_get(f'/{media_type}/{item_id}/watch/providers')
+    all_regions = providers_data.get('results', {})
+    region = all_regions.get(country) or all_regions.get('US') or {}
+    watch_providers = {
+        'flatrate': [
+            {'provider_name': p['provider_name'],
+             'logo_path': IMG_BASE + p['logo_path'] if p.get('logo_path') else None}
+            for p in region.get('flatrate', [])
+        ],
+        'rent': [
+            {'provider_name': p['provider_name'],
+             'logo_path': IMG_BASE + p['logo_path'] if p.get('logo_path') else None}
+            for p in region.get('rent', [])
+        ],
+        'buy': [
+            {'provider_name': p['provider_name'],
+             'logo_path': IMG_BASE + p['logo_path'] if p.get('logo_path') else None}
+            for p in region.get('buy', [])
+        ],
+    }
+
     return jsonify({
-        'trailer_key': trailer_key,
-        'cast':        cast,
-        'genres':      genres,
-        'runtime':     runtime,
-        'tagline':     tagline,
+        'trailer_key':     trailer_key,
+        'cast':            cast,
+        'genres':          genres,
+        'runtime':         runtime,
+        'tagline':         tagline,
+        'watch_providers': watch_providers,
     })
 
 
