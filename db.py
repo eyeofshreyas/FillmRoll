@@ -138,10 +138,9 @@ def remove_from_watchlist(email, movie_id):
     if not db or not email:
         return False
     try:
-        from google.cloud import firestore as _fs
         key = f'watchlist.{movie_id}'
         db.collection('users').document(email).update(
-            {key: _fs.DELETE_FIELD}
+            {key: firestore.DELETE_FIELD}
         )
         return True
     except Exception as e:
