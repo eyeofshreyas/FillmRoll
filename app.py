@@ -712,5 +712,68 @@ def cf_recommend():
     return jsonify({'results': results, 'rated_count': len(ratings)})
 
 
+@app.route('/watchlist')
+@login_required
+def get_watchlist_route():
+    """Return the current user's watchlist, with session cache."""
+    user_email = session.get('user', {}).get('email')
+    if user_email and 'watchlist_synced' not in session:
+        session['watchlist'] = get_watchlist(user_email)
+        session['watchlist_synced'] = True
+        session.modified = True
+    return jsonify(session.get('watchlist', []))
+
+
+@app.route('/watchlist/add', methods=['POST'])
+@login_required
+def watchlist_add():
+    data = request.get_json()
+    movie_id = data.get('movie_id')
+    title = data.get('title', '')
+    if not movie_id or not title:
+        return jsonify({'error': 'movie_id and title are required'}), 400
+
+    item = {
+        'movie_id':   int(movie_id),
+        'title':      title,
+        'poster':     data.get('poster', ''),
+        'media_type': data.get('media_type', 'movie'),
+        'rating':     data.get('rating', 0),
+        'added_at':   __import__('datetime').datetime.utcnow().isoformat(),
+    }
+
+    user_email = session.get('user', {}).get('email')
+    if user_email:
+        add_to_watchlist(user_email, item)
+
+    wl = session.get('watchlist', [])
+    wl = [m for m in wl if m.get('movie_id') != int(movie_id)]
+    wl.insert(0, item)
+    session['watchlist'] = wl
+    session.modified = True
+
+    return jsonify({'ok': True, 'count': len(wl)})
+
+
+@app.route('/watchlist/remove', methods=['POST'])
+@login_required
+def watchlist_remove():
+    data = request.get_json()
+    movie_id = data.get('movie_id')
+    if not movie_id:
+        return jsonify({'error': 'movie_id is required'}), 400
+
+    user_email = session.get('user', {}).get('email')
+    if user_email:
+        remove_from_watchlist(user_email, str(movie_id))
+
+    wl = session.get('watchlist', [])
+    wl = [m for m in wl if m.get('movie_id') != int(movie_id)]
+    session['watchlist'] = wl
+    session.modified = True
+
+    return jsonify({'ok': True, 'count': len(wl)})
+
+
 if __name__ == '__main__':
     app.run(debug=True)
