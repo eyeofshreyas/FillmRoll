@@ -50,7 +50,7 @@ google = oauth.register(
     client_kwargs={'scope': 'openid email profile'},
 )
 
-API_KEY  = 'ebef1aa0b639138c3040e6929ea9f1eb'
+API_KEY  = os.environ.get('TMDB_API_KEY', '')
 IMG_BASE = 'https://image.tmdb.org/t/p/w500'
 TMDB_BASE = 'https://api.themoviedb.org/3'
 SEARCH_MULTI_URL = f'{TMDB_BASE}/search/multi'
