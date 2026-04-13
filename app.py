@@ -1,6 +1,7 @@
 import os
 import pickle
 import json
+from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
 import requests
@@ -727,7 +728,7 @@ def get_watchlist_route():
 @app.route('/watchlist/add', methods=['POST'])
 @login_required
 def watchlist_add():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     movie_id = data.get('movie_id')
     title = data.get('title', '')
     if not movie_id or not title:
@@ -739,12 +740,13 @@ def watchlist_add():
         'poster':     data.get('poster', ''),
         'media_type': data.get('media_type', 'movie'),
         'rating':     data.get('rating', 0),
-        'added_at':   __import__('datetime').datetime.utcnow().isoformat(),
+        'added_at':   datetime.now(timezone.utc).isoformat(),
     }
 
     user_email = session.get('user', {}).get('email')
     if user_email:
-        add_to_watchlist(user_email, item)
+        if not add_to_watchlist(user_email, item):
+            app.logger.warning('Firestore watchlist add failed for %s', user_email)
 
     wl = session.get('watchlist', [])
     wl = [m for m in wl if m.get('movie_id') != int(movie_id)]
@@ -758,7 +760,7 @@ def watchlist_add():
 @app.route('/watchlist/remove', methods=['POST'])
 @login_required
 def watchlist_remove():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     movie_id = data.get('movie_id')
     if not movie_id:
         return jsonify({'error': 'movie_id is required'}), 400
