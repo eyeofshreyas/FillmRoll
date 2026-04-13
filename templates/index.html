@@ -65,10 +65,10 @@
             <div class="user-email">{{ user.email }}</div>
           </div>
           <div class="dropdown-divider"></div>
-          <a href="#" class="dropdown-item" onclick="showWatchlist(); toggleUserMenu(); return false;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          <button class="dropdown-item" onclick="showWatchlist(); toggleUserMenu()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
             My Watchlist
-          </a>
+          </button>
           <div class="dropdown-divider"></div>
           <a href="/logout" class="dropdown-item">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -226,7 +226,7 @@
   </div>
 
   <!-- ── RESULTS ── -->
-  <main class="page" id="results-page" style="display:none">
+  <main class="page" id="results-page" style="display:none" aria-label="Search results">
 
     <div id="spinner">
       <div class="dots"><span></span><span></span><span></span></div>
@@ -273,16 +273,16 @@
   </main>
 
   <!-- ── WATCHLIST PAGE ── -->
-  <main class="page" id="watchlist-page" style="display:none">
+  <main class="page" id="watchlist-page" style="display:none" aria-label="My Watchlist">
     <div id="watchlist-spinner" style="display:none">
       <div class="dots"><span></span><span></span><span></span></div>
       <div class="spin-msg">Loading your watchlist</div>
     </div>
-    <div id="watchlist-header" class="section-row" style="margin-bottom:24px">
+    <div id="watchlist-header" class="section-row">
       <h3>My Watchlist</h3>
       <span class="count-pill" id="watchlist-count"></span>
     </div>
-    <div id="watchlist-empty" style="display:none;text-align:center;padding:80px 0;color:var(--text3);font-size:0.95rem">
+    <div id="watchlist-empty" style="display:none">
       Your watchlist is empty.<br>Bookmark movies to save them here.
     </div>
     <div class="grid" id="watchlist-grid"></div>
@@ -333,8 +333,9 @@
           <span class="star" data-v="5">★</span>
         </div>
         <span class="rate-msg" id="rate-msg"></span>
-        <button class="btn-bookmark" id="modal-bookmark" onclick="toggleWatchlist()" title="Add to watchlist">
-          <svg id="bookmark-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        <button class="btn-bookmark" id="modal-bookmark" onclick="toggleWatchlist()"
+                aria-pressed="false" aria-label="Add to watchlist">
+          <svg id="bookmark-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
         </button>
       </div>
     </div>
