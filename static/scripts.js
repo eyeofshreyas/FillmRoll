@@ -112,7 +112,7 @@ async function openModal(data) {
                 movie_id:   data.movie_id,
                 title:      data.title,
                 media_type: data.media_type,
-                country:    (navigator.language.split('-')[1] || 'US').toUpperCase(),
+                country:    (() => { try { return new Intl.Locale(navigator.language).region || 'US'; } catch (_) { return (navigator.language.split('-')[1] || 'US').toUpperCase(); } })(),
             }),
         });
         const det = await res.json();
