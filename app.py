@@ -240,8 +240,9 @@ def call_hf_chat_sync(messages, max_tokens=150):
         )
         if r.status_code == 200:
             return r.json()['choices'][0]['message']['content'].strip()
-    except Exception:
-        pass
+        app.logger.warning('call_hf_chat_sync: HTTP %s — %s', r.status_code, r.text[:200])
+    except Exception as e:
+        app.logger.warning('call_hf_chat_sync: %s', e)
     return None
 
 
