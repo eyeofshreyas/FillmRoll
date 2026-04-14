@@ -227,6 +227,24 @@ def stream_hf_chat(messages):
         yield f"data: {json.dumps({'content': f'Error: {str(e)}', 'done': True})}\n\n"
 
 
+def call_hf_chat_sync(messages, max_tokens=150):
+    """Non-streaming HF chat completion. Returns content string or None on error."""
+    if not hf_available():
+        return None
+    try:
+        r = requests.post(
+            HF_CHAT_URL,
+            headers={'Authorization': f'Bearer {HF_TOKEN}'},
+            json={'model': HF_MODEL, 'messages': messages, 'stream': False, 'max_tokens': max_tokens},
+            timeout=30,
+        )
+        if r.status_code == 200:
+            return r.json()['choices'][0]['message']['content'].strip()
+    except Exception:
+        pass
+    return None
+
+
 # ── Auth helpers ──────────────────────────────────────────────
 
 def login_required(f):
