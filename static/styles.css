@@ -2386,3 +2386,37 @@ button.dropdown-item {
 }
 .why-blurb p { margin: 0; }
 .why-blurb.loading p { opacity: 0.5; font-style: italic; }
+
+/* ── Movie Night Matchmaker ── */
+.matchmaker-container { max-width: 760px; margin: 2rem auto; padding: 0 1rem; text-align: center; }
+.matchmaker-title { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.4rem; }
+.matchmaker-subtitle { color: var(--text2); margin-bottom: 2rem; font-size: 0.95rem; }
+.matchmaker-grid { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem; }
+.taste-card { flex: 1; background: var(--sur2); border-radius: 12px; padding: 1.25rem; text-align: left; }
+.taste-label { font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gold); margin-bottom: 0.75rem; }
+.taste-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.taste-chip { background: var(--sur3); border-radius: 20px; padding: 0.25rem 0.7rem; font-size: 0.8rem; white-space: nowrap; }
+.taste-chip .chip-star { color: var(--gold); margin-left: 0.2rem; }
+.taste-empty { font-size: 0.85rem; color: var(--text2); }
+.taste-empty.hidden { display: none; }
+.taste-plus { font-size: 2rem; color: var(--text3); padding-top: 2.5rem; flex-shrink: 0; }
+.partner-textarea { width: 100%; background: transparent; border: 1px solid var(--rule); border-radius: 8px; color: var(--text); font: inherit; font-size: 0.9rem; padding: 0.65rem 0.75rem; resize: vertical; transition: border-color 0.2s; box-sizing: border-box; }
+.partner-textarea:focus { outline: none; border-color: var(--gold); }
+.matchmaker-btn { background: var(--gold); color: var(--deep); border: none; border-radius: 8px; padding: 0.7rem 2rem; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+.matchmaker-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.matchmaker-spinner { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; margin: 1.5rem 0; color: var(--text2); font-size: 0.9rem; }
+.matchmaker-spinner.hidden { display: none; }
+.matchmaker-result { margin-top: 2rem; }
+.matchmaker-result.hidden { display: none; }
+.matchmaker-card { display: flex; align-items: center; gap: 1.25rem; background: var(--sur2); border-radius: 12px; padding: 1rem; text-align: left; margin-bottom: 1rem; cursor: pointer; transition: transform 0.2s; }
+.matchmaker-card:hover { transform: translateY(-2px); }
+.matchmaker-card img { width: 70px; border-radius: 6px; flex-shrink: 0; object-fit: cover; }
+.matchmaker-card-info h3 { margin: 0 0 0.3rem; font-size: 1.1rem; }
+.matchmaker-card-info p { margin: 0; font-size: 0.85rem; color: var(--text2); }
+.matchmaker-reason { font-size: 0.9rem; color: var(--text2); font-style: italic; text-align: center; }
+.matchmaker-error { color: #e06c75; font-size: 0.9rem; margin-top: 1rem; }
+.matchmaker-error.hidden { display: none; }
+@media (max-width: 600px) {
+  .matchmaker-grid { flex-direction: column; }
+  .taste-plus { padding-top: 0; align-self: center; }
+}
