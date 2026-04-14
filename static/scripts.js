@@ -795,10 +795,10 @@ let currentModalMovie = null;
 const _origOpenModal = openModal;
 openModal = async function (data) {
     currentModalMovie = data;
+    document.getElementById('modal-why-blurb').classList.add('hidden');
     fetchWhyBlurb(data);
     highlightStars(userRatings[data.title] || 0);
     $('rate-msg').textContent = '';
-    document.getElementById('modal-why-blurb').classList.add('hidden');
     // Reset providers section
     $('modal-providers').style.display = 'none';
     $('providers-groups').innerHTML = '';
