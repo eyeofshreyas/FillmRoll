@@ -41,10 +41,12 @@ def init_firebase():
                 firebase_admin.initialize_app(cred)
                 return firestore.client()
             except Exception as e:
-                raise RuntimeError(
-                    f"FATAL FIREBASE ERROR: {type(e).__name__}: {e} | "
-                    f"Prefix: {repr(os.environ.get('FIREBASE_CREDENTIALS_BASE64', '')[:50])}"
+                print(
+                    f"[Firebase] WARNING: Base64 credentials failed ({type(e).__name__}: {e}). "
+                    f"Falling back to local file.",
+                    file=sys.stderr
                 )
+                # Fall through to local file fallback below
 
         # Fallback to local file
         cred_path = os.environ.get('FIREBASE_CREDENTIALS', 'firebase-credentials.json')
@@ -53,6 +55,12 @@ def init_firebase():
             firebase_admin.initialize_app(cred)
             return firestore.client()
         else:
+            if os.environ.get('FIREBASE_CREDENTIALS_BASE64'):
+                # Had base64 creds but they failed AND no local file — fatal in production
+                raise RuntimeError(
+                    "FATAL FIREBASE ERROR: Base64 credentials are invalid and no local "
+                    "firebase-credentials.json found. Check FIREBASE_CREDENTIALS_BASE64."
+                )
             print("[Firebase] WARNING: No credentials found. Set FIREBASE_CREDENTIALS_BASE64 env var.", file=sys.stderr)
             return None
     
