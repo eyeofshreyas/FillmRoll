@@ -308,12 +308,13 @@
         </div>
         <div class="taste-plus" aria-hidden="true">+</div>
         <div class="taste-card">
-          <h3 class="taste-label">Partner's Taste</h3>
+          <h3 id="partner-label" class="taste-label">Partner's Taste</h3>
           <textarea
             id="partner-input"
             class="partner-textarea"
             rows="4"
             maxlength="300"
+            aria-labelledby="partner-label"
             placeholder="e.g. loves action thrillers, Christopher Nolan films, and anything with a twist ending…"
           ></textarea>
         </div>
@@ -321,12 +322,12 @@
 
       <button id="matchmaker-btn" class="matchmaker-btn" onclick="fetchMatch()">Find Our Movie</button>
 
-      <div id="matchmaker-spinner" class="matchmaker-spinner hidden">
-        <div class="spin"></div>
-        <p>Asking the AI matchmaker…</p>
+      <div id="matchmaker-spinner" class="matchmaker-spinner hidden" aria-live="polite">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <p class="spin-msg">Asking the AI matchmaker…</p>
       </div>
 
-      <div id="matchmaker-result" class="matchmaker-result hidden">
+      <div id="matchmaker-result" class="matchmaker-result hidden" aria-live="polite">
         <div id="matchmaker-card" class="matchmaker-card"></div>
         <p id="matchmaker-reason" class="matchmaker-reason"></p>
       </div>

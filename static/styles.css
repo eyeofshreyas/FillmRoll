@@ -2403,6 +2403,7 @@ button.dropdown-item {
 .partner-textarea { width: 100%; background: transparent; border: 1px solid var(--rule); border-radius: 8px; color: var(--text); font: inherit; font-size: 0.9rem; padding: 0.65rem 0.75rem; resize: vertical; transition: border-color 0.2s; box-sizing: border-box; }
 .partner-textarea:focus { outline: none; border-color: var(--gold); }
 .matchmaker-btn { background: var(--gold); color: var(--deep); border: none; border-radius: 8px; padding: 0.7rem 2rem; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+.matchmaker-btn:hover:not(:disabled) { opacity: 0.85; }
 .matchmaker-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .matchmaker-spinner { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; margin: 1.5rem 0; color: var(--text2); font-size: 0.9rem; }
 .matchmaker-spinner.hidden { display: none; }
