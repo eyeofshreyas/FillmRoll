@@ -2368,19 +2368,18 @@ button.dropdown-item {
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
-  background: rgba(var(--accent-rgb, 255, 180, 0), 0.08);
-  border-left: 3px solid var(--accent, #ffb400);
+  background: var(--gold-lo);
+  border-left: 3px solid var(--gold);
   border-radius: 0 8px 8px 0;
   padding: 0.65rem 0.9rem;
   margin: 0.75rem 0 0.25rem;
   font-size: 0.88rem;
   line-height: 1.55;
-  color: var(--text-secondary, #ccc);
-  transition: opacity 0.3s;
+  color: var(--text2);
 }
 .why-blurb.hidden { display: none; }
 .why-blurb .why-icon {
-  color: var(--accent, #ffb400);
+  color: var(--gold);
   font-size: 0.75rem;
   flex-shrink: 0;
   margin-top: 0.2rem;
