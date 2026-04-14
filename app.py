@@ -1,6 +1,7 @@
 import os
 import pickle
 import json
+import re
 from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
@@ -612,7 +613,7 @@ def why_you_like():
 def matchmaker():
     """Given partner taste description, return a movie both users will enjoy."""
     data = request.get_json(silent=True) or {}
-    partner_desc = (data.get('partner_desc') or '').strip()
+    partner_desc = (data.get('partner_desc') or '').strip()[:300]
     if not partner_desc:
         return jsonify({'error': 'partner_desc is required'}), 400
 
@@ -655,24 +656,25 @@ def matchmaker():
         return jsonify({'error': 'AI unavailable'}), 503
 
     # Extract JSON from model response (model may wrap it in extra text)
-    import re as _re
-    m = _re.search(r'\{[^{}]+\}', raw, _re.DOTALL)
+    m = re.search(r'\{.*\}', raw, re.DOTALL)
     try:
         result = json.loads(m.group() if m else raw)
         suggested_title = result.get('title', '').strip()
-        reason = result.get('reason', '').strip()
+        reason = result.get('reason', '').strip()[:300]
     except Exception:
-        return jsonify({'error': 'Could not parse AI response', 'raw': raw}), 500
+        app.logger.warning('matchmaker: parse error — %s', raw[:300])
+        return jsonify({'error': 'Could not parse AI response'}), 500
 
     if not suggested_title:
-        return jsonify({'error': 'AI returned empty title', 'raw': raw}), 500
+        app.logger.warning('matchmaker: empty title — %s', raw[:300])
+        return jsonify({'error': 'AI returned empty title'}), 500
 
     # Look up movie in catalog (exact then partial)
     match = movies[movies['title'].str.lower() == suggested_title.lower()]
     if match.empty:
         match = movies[
             movies['title'].str.lower().str.contains(
-                suggested_title.lower()[:20], na=False, regex=False
+                suggested_title.lower(), na=False, regex=False
             )
         ]
 
