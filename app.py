@@ -557,6 +557,45 @@ def ai_search():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/api/why-you-like', methods=['POST'])
+def why_you_like():
+    """Return a 2-sentence AI blurb explaining why the user will love a movie."""
+    data = request.get_json()
+    title = (data.get('title') or '').strip()
+    overview = (data.get('overview') or '')[:200]
+
+    ratings = session.get('ratings', {})
+    if not ratings or not title:
+        return jsonify({'blurb': None})
+
+    top_rated = sorted(ratings.items(), key=lambda x: x[1], reverse=True)[:5]
+    history_str = ', '.join(f"{t} ({r}★)" for t, r in top_rated)
+
+    messages = [
+        {
+            'role': 'system',
+            'content': (
+                "You are FilmRoll AI. Given a user's favorite movies and a new movie, "
+                "write exactly 2 sentences explaining why they will love it. "
+                "Be specific about shared themes, tone, or style. "
+                "Start the response with \"Since you loved\""
+            ),
+        },
+        {
+            'role': 'user',
+            'content': (
+                f"User's favorites: {history_str}\n"
+                f"New movie: {title}\n"
+                f"Overview: {overview}\n"
+                "Explain in 2 sentences why they'll love it."
+            ),
+        },
+    ]
+
+    blurb = call_hf_chat_sync(messages, max_tokens=120)
+    return jsonify({'blurb': blurb})
+
+
 # ── Mood → TMDB genre mapping ────────────────────────────────
 MOOD_GENRES = {
     'happy':       [35, 10751, 16],   # Comedy, Family, Animation
