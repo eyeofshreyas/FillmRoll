@@ -607,6 +607,82 @@ def why_you_like():
     return jsonify({'blurb': blurb})
 
 
+@app.route('/api/matchmaker', methods=['POST'])
+@login_required
+def matchmaker():
+    """Given partner taste description, return a movie both users will enjoy."""
+    data = request.get_json(silent=True) or {}
+    partner_desc = (data.get('partner_desc') or '').strip()
+    if not partner_desc:
+        return jsonify({'error': 'partner_desc is required'}), 400
+
+    # Sync ratings from Firestore on first request (cold session)
+    user_email = session.get('user', {}).get('email')
+    if user_email and 'db_synced' not in session:
+        session['ratings'] = get_user_ratings(user_email)
+        session['db_synced'] = True
+        session.modified = True
+
+    ratings = session.get('ratings', {})
+    top_rated = sorted(ratings.items(), key=lambda x: x[1], reverse=True)[:5]
+    user_str = (
+        ', '.join(f"{t[:40]} ({r}\u2605)" for t, r in top_rated)
+        if top_rated else 'No rated movies yet'
+    )
+
+    messages = [
+        {
+            'role': 'system',
+            'content': (
+                "You are a movie matchmaker. Given taste profiles for two people, "
+                "suggest ONE movie both would enjoy. "
+                'Respond ONLY with valid JSON, no markdown: '
+                '{"title": "exact movie title", "reason": "one sentence why both will enjoy it"}'
+            ),
+        },
+        {
+            'role': 'user',
+            'content': (
+                f"Person 1 favorites: {user_str}\n"
+                f"Person 2 likes: {partner_desc[:300]}\n"
+                "Suggest ONE movie both will enjoy."
+            ),
+        },
+    ]
+
+    raw = call_hf_chat_sync(messages, max_tokens=120)
+    if not raw:
+        return jsonify({'error': 'AI unavailable'}), 503
+
+    # Extract JSON from model response (model may wrap it in extra text)
+    import re as _re
+    m = _re.search(r'\{[^{}]+\}', raw, _re.DOTALL)
+    try:
+        result = json.loads(m.group() if m else raw)
+        suggested_title = result.get('title', '').strip()
+        reason = result.get('reason', '').strip()
+    except Exception:
+        return jsonify({'error': 'Could not parse AI response', 'raw': raw}), 500
+
+    if not suggested_title:
+        return jsonify({'error': 'AI returned empty title', 'raw': raw}), 500
+
+    # Look up movie in catalog (exact then partial)
+    match = movies[movies['title'].str.lower() == suggested_title.lower()]
+    if match.empty:
+        match = movies[
+            movies['title'].str.lower().str.contains(
+                suggested_title.lower()[:20], na=False, regex=False
+            )
+        ]
+
+    if match.empty:
+        return jsonify({'title': suggested_title, 'reason': reason, 'in_catalog': False})
+
+    movie = build_item_dict(movies.iloc[match.index[0]])
+    return jsonify({'movie': movie, 'reason': reason, 'in_catalog': True})
+
+
 # ── Mood → TMDB genre mapping ────────────────────────────────
 MOOD_GENRES = {
     'happy':       [35, 10751, 16],   # Comedy, Family, Animation
