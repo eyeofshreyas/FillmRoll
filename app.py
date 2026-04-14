@@ -558,18 +558,29 @@ def ai_search():
 
 
 @app.route('/api/why-you-like', methods=['POST'])
+@login_required
 def why_you_like():
     """Return a 2-sentence AI blurb explaining why the user will love a movie."""
-    data = request.get_json()
-    title = (data.get('title') or '').strip()
+    data = request.get_json(silent=True) or {}
+    title = (data.get('title') or '').strip()[:100]
     overview = (data.get('overview') or '')[:200]
 
+    if not title:
+        return jsonify({'error': 'title is required'}), 400
+
+    # Sync ratings from Firestore on first request (cold session)
+    user_email = session.get('user', {}).get('email')
+    if user_email and 'db_synced' not in session:
+        session['ratings'] = get_user_ratings(user_email)
+        session['db_synced'] = True
+        session.modified = True
+
     ratings = session.get('ratings', {})
-    if not ratings or not title:
+    if not ratings:
         return jsonify({'blurb': None})
 
     top_rated = sorted(ratings.items(), key=lambda x: x[1], reverse=True)[:5]
-    history_str = ', '.join(f"{t} ({r}★)" for t, r in top_rated)
+    history_str = ', '.join(f"{t[:40]} ({r}★)" for t, r in top_rated)
 
     messages = [
         {
@@ -592,7 +603,7 @@ def why_you_like():
         },
     ]
 
-    blurb = call_hf_chat_sync(messages, max_tokens=120)
+    blurb = call_hf_chat_sync(messages, max_tokens=160)
     return jsonify({'blurb': blurb})
 
 
