@@ -996,3 +996,133 @@ async function showWatchlist() {
         $('watchlist-empty').style.display = 'block';
     }
 }
+
+// ── Movie Night Matchmaker ────────────────────────────────────────────────
+function showMatchmaker() {
+    // Hide all page sections
+    const pages = ['#results-page', '#watchlist-page', '#browse-page', '#trending-page', '#matchmaker-page'];
+    pages.forEach(sel => {
+        const el = document.querySelector(sel);
+        if (el) el.style.display = 'none';
+    });
+    const home = document.getElementById('home-content');
+    if (home) home.style.display = 'none';
+
+    const page = document.getElementById('matchmaker-page');
+    if (!page) return;
+    page.style.display = '';
+
+    // Clear active state from nav buttons
+    document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
+
+    // Populate "Your Taste" chips from userRatings
+    const chipsEl = document.getElementById('my-taste-chips');
+    const emptyEl = document.getElementById('my-taste-empty');
+    if (chipsEl) {
+        chipsEl.innerHTML = '';
+        const sorted = Object.entries(userRatings).sort((a, b) => b[1] - a[1]).slice(0, 6);
+        if (sorted.length === 0) {
+            if (emptyEl) emptyEl.classList.remove('hidden');
+        } else {
+            if (emptyEl) emptyEl.classList.add('hidden');
+            sorted.forEach(([title, rating]) => {
+                const chip = document.createElement('span');
+                chip.className = 'taste-chip';
+                chip.textContent = title;
+                const star = document.createElement('span');
+                star.className = 'chip-star';
+                star.textContent = '\u2605'.repeat(rating);
+                chip.appendChild(star);
+                chipsEl.appendChild(chip);
+            });
+        }
+    }
+
+    // Reset result/error/spinner state
+    const result  = document.getElementById('matchmaker-result');
+    const errEl   = document.getElementById('matchmaker-error');
+    const spinner = document.getElementById('matchmaker-spinner');
+    const input   = document.getElementById('partner-input');
+    if (result)  result.classList.add('hidden');
+    if (errEl)   errEl.classList.add('hidden');
+    if (spinner) spinner.classList.add('hidden');
+    if (input)   input.value = '';
+}
+
+async function fetchMatch() {
+    const input = document.getElementById('partner-input');
+    const partnerDesc = (input ? input.value : '').trim();
+    const errEl   = document.getElementById('matchmaker-error');
+    const btn     = document.getElementById('matchmaker-btn');
+    const spinner = document.getElementById('matchmaker-spinner');
+    const result  = document.getElementById('matchmaker-result');
+
+    if (!partnerDesc) {
+        if (errEl) {
+            errEl.textContent = "Please describe your partner\u2019s taste first.";
+            errEl.classList.remove('hidden');
+        }
+        return;
+    }
+
+    if (btn)     btn.disabled = true;
+    if (spinner) spinner.classList.remove('hidden');
+    if (result)  result.classList.add('hidden');
+    if (errEl)   errEl.classList.add('hidden');
+
+    try {
+        const res  = await fetch('/api/matchmaker', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ partner_desc: partnerDesc }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+            if (errEl) {
+                errEl.textContent = data.error || 'Something went wrong. Try again.';
+                errEl.classList.remove('hidden');
+            }
+            return;
+        }
+
+        const cardEl   = document.getElementById('matchmaker-card');
+        const reasonEl = document.getElementById('matchmaker-reason');
+
+        if (cardEl) {
+            if (data.in_catalog && data.movie) {
+                const m = data.movie;
+                const img = document.createElement('img');
+                img.src = m.poster || '';
+                img.alt = m.title;
+                img.loading = 'lazy';
+
+                const info = document.createElement('div');
+                info.className = 'matchmaker-card-info';
+                info.innerHTML = `<h3>${m.title}</h3><p>\u2B50 ${m.rating ? m.rating.toFixed(1) : 'N/A'}</p>`;
+
+                cardEl.innerHTML = '';
+                cardEl.appendChild(img);
+                cardEl.appendChild(info);
+                cardEl.onclick = () => openModal(m);
+            } else {
+                cardEl.innerHTML = `<div class="matchmaker-card-info"><h3>${data.title || 'Unknown'}</h3><p style="color:#e06c75">Not in our catalog \u2014 try searching online</p></div>`;
+                cardEl.onclick = null;
+            }
+        }
+
+        if (reasonEl) {
+            reasonEl.textContent = data.reason ? `\u201C${data.reason}\u201D` : '';
+        }
+        if (result) result.classList.remove('hidden');
+
+    } catch (_) {
+        if (errEl) {
+            errEl.textContent = 'Network error. Check your connection.';
+            errEl.classList.remove('hidden');
+        }
+    } finally {
+        if (btn)     btn.disabled = false;
+        if (spinner) spinner.classList.add('hidden');
+    }
+}
