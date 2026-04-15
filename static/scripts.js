@@ -83,36 +83,44 @@ function closeModal() {
 on(document, 'keydown', e => { if (e.key === 'Escape') closeModal(); });
 
 async function fetchWhyBlurb(movie) {
-  const blurbEl = document.getElementById('modal-why-blurb');
-  const textEl  = document.getElementById('why-blurb-text');
-  if (!blurbEl || !textEl) return;
+    const blurbEl = document.getElementById('modal-why-blurb');
+    const textEl  = document.getElementById('why-blurb-text');
+    if (!blurbEl || !textEl) return;
 
-  // Need at least 2 rated movies before calling the API
-  if (Object.keys(userRatings).length < 2) {
-    blurbEl.classList.add('hidden');
-    return;
-  }
+    const expectedTitle = movie.title; // snapshot before any await
 
-  blurbEl.classList.remove('hidden');
-  blurbEl.classList.add('loading');
-  textEl.textContent = 'Personalizing\u2026';
-
-  try {
-    const res = await fetch('/api/why-you-like', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: movie.title, overview: movie.overview || '' }),
-    });
-    const data = await res.json();
-    if (data.blurb) {
-      textEl.textContent = data.blurb;
-      blurbEl.classList.remove('loading');
-    } else {
-      blurbEl.classList.add('hidden');
+    if (Object.keys(userRatings).length < 2) {
+        blurbEl.classList.add('hidden');
+        return;
     }
-  } catch (_) {
-    blurbEl.classList.add('hidden');
-  }
+
+    blurbEl.classList.remove('hidden');
+    blurbEl.classList.add('loading');
+    textEl.textContent = 'Personalizing\u2026';
+
+    try {
+        const res = await fetch('/api/why-you-like', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: movie.title, overview: movie.overview || '' }),
+        });
+        // Discard if user opened a different movie while this was in flight
+        if (currentModalMovie?.title !== expectedTitle) return;
+        if (!res.ok) throw new Error(res.status);
+        const data = await res.json();
+        if (data.blurb) {
+            textEl.textContent = data.blurb;
+            blurbEl.classList.remove('loading');
+        } else {
+            blurbEl.classList.remove('loading');
+            blurbEl.classList.add('hidden');
+        }
+    } catch (_) {
+        if (currentModalMovie?.title === expectedTitle) {
+            blurbEl.classList.remove('loading');
+            blurbEl.classList.add('hidden');
+        }
+    }
 }
 
 async function openModal(data) {
@@ -796,7 +804,7 @@ const _origOpenModal = openModal;
 openModal = async function (data) {
     currentModalMovie = data;
     document.getElementById('modal-why-blurb').classList.add('hidden');
-    fetchWhyBlurb(data);
+    fetchWhyBlurb(data).catch(err => console.warn('[why-blurb]', err));
     highlightStars(userRatings[data.title] || 0);
     $('rate-msg').textContent = '';
     // Reset providers section
