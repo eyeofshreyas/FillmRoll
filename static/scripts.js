@@ -999,25 +999,29 @@ async function showWatchlist() {
 
 // ── Movie Night Matchmaker ────────────────────────────────────────────────
 function showMatchmaker() {
-    // Hide all page sections
-    const pages = ['#results-page', '#watchlist-page', '#browse-page', '#trending-page', '#matchmaker-page'];
-    pages.forEach(sel => {
-        const el = document.querySelector(sel);
+    // Hide home sections (same pattern as showWatchlist / fetchRecs)
+    $('hero-section').style.display = 'none';
+    $('trending-section').style.display = 'none';
+    $('mood-section').style.display = 'none';
+    $('genre-section').style.display = 'none';
+    document.querySelectorAll('.home-spacer').forEach(s => s.style.display = 'none');
+
+    // Hide other pages
+    const otherPages = ['results-page', 'watchlist-page'];
+    otherPages.forEach(id => {
+        const el = $(id);
         if (el) el.style.display = 'none';
     });
-    const home = document.getElementById('home-content');
-    if (home) home.style.display = 'none';
 
-    const page = document.getElementById('matchmaker-page');
+    const page = $('matchmaker-page');
     if (!page) return;
     page.style.display = '';
 
-    // Clear active state from nav buttons
-    document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
+    setActiveNav('');
 
     // Populate "Your Taste" chips from userRatings
-    const chipsEl = document.getElementById('my-taste-chips');
-    const emptyEl = document.getElementById('my-taste-empty');
+    const chipsEl = $('my-taste-chips');
+    const emptyEl = $('my-taste-empty');
     if (chipsEl) {
         chipsEl.innerHTML = '';
         const sorted = Object.entries(userRatings).sort((a, b) => b[1] - a[1]).slice(0, 6);
@@ -1039,10 +1043,10 @@ function showMatchmaker() {
     }
 
     // Reset result/error/spinner state
-    const result  = document.getElementById('matchmaker-result');
-    const errEl   = document.getElementById('matchmaker-error');
-    const spinner = document.getElementById('matchmaker-spinner');
-    const input   = document.getElementById('partner-input');
+    const result  = $('matchmaker-result');
+    const errEl   = $('matchmaker-error');
+    const spinner = $('matchmaker-spinner');
+    const input   = $('partner-input');
     if (result)  result.classList.add('hidden');
     if (errEl)   errEl.classList.add('hidden');
     if (spinner) spinner.classList.add('hidden');
@@ -1096,17 +1100,33 @@ async function fetchMatch() {
                 img.src = m.poster || '';
                 img.alt = m.title;
                 img.loading = 'lazy';
+                img.onerror = () => { img.src = 'https://via.placeholder.com/300x450/1c1916/2e2a22?text=No+Poster'; };
 
                 const info = document.createElement('div');
                 info.className = 'matchmaker-card-info';
-                info.innerHTML = `<h3>${m.title}</h3><p>\u2B50 ${m.rating ? m.rating.toFixed(1) : 'N/A'}</p>`;
+                const h3in = document.createElement('h3');
+                h3in.textContent = m.title;
+                const pin = document.createElement('p');
+                pin.textContent = '\u2B50 ' + (m.rating ? m.rating.toFixed(1) : 'N/A');
+                info.appendChild(h3in);
+                info.appendChild(pin);
 
                 cardEl.innerHTML = '';
                 cardEl.appendChild(img);
                 cardEl.appendChild(info);
                 cardEl.onclick = () => openModal(m);
             } else {
-                cardEl.innerHTML = `<div class="matchmaker-card-info"><h3>${data.title || 'Unknown'}</h3><p style="color:#e06c75">Not in our catalog \u2014 try searching online</p></div>`;
+                const wrapper = document.createElement('div');
+                wrapper.className = 'matchmaker-card-info';
+                const h3out = document.createElement('h3');
+                h3out.textContent = data.title || 'Unknown';
+                const pout = document.createElement('p');
+                pout.style.color = '#e06c75';
+                pout.textContent = 'Not in our catalog \u2014 try searching online';
+                wrapper.appendChild(h3out);
+                wrapper.appendChild(pout);
+                cardEl.innerHTML = '';
+                cardEl.appendChild(wrapper);
                 cardEl.onclick = null;
             }
         }
