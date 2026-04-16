@@ -60,7 +60,7 @@
         border-bottom: 1px solid var(--rule);
         display: flex;
         align-items: center;
-        padding: 0 32px;
+        padding: 0 clamp(20px, 4vw, 80px);
         gap: 20px;
     }
 
@@ -84,7 +84,7 @@
 
     .header-search {
         flex: 1;
-        max-width: 420px;
+        max-width: clamp(320px, 30vw, 560px);
         position: relative;
     }
 
@@ -295,7 +295,7 @@
     ══════════════════════════════════════════ */
     .hero {
         position: relative;
-        padding: 80px 32px 68px;
+        padding: clamp(60px, 8vh, 130px) clamp(20px, 6vw, 120px) clamp(50px, 6vh, 90px);
         border-bottom: 1px solid var(--rule);
         overflow: hidden;
     }
@@ -315,7 +315,7 @@
     }
 
     .hero-inner {
-        max-width: 680px;
+        max-width: clamp(600px, 55vw, 860px);
         margin: 0 auto;
         text-align: center;
         position: relative;
@@ -345,7 +345,7 @@
 
     .hero h1 {
         font-family: 'Cormorant Garamond', Georgia, serif;
-        font-size: 4.2rem;
+        font-size: clamp(3rem, 5.5vw, 5.8rem);
         font-weight: 300;
         letter-spacing: -0.02em;
         line-height: 1.08;
@@ -371,7 +371,7 @@
     /* ── hero search ── */
     .hero-search {
         position: relative;
-        max-width: 520px;
+        max-width: clamp(480px, 48vw, 700px);
         margin: 0 auto;
     }
 
@@ -463,9 +463,9 @@
        HOME SECTIONS WRAPPER
     ══════════════════════════════════════════ */
     .home-section {
-        max-width: 1140px;
+        max-width: 100%;
         margin: 0 auto;
-        padding: 0 32px;
+        padding: 0 clamp(20px, 5vw, 100px);
     }
 
     .section-title {
@@ -513,7 +513,7 @@
 
     .t-card {
         flex-shrink: 0;
-        width: 145px;
+        width: clamp(130px, 11vw, 190px);
         scroll-snap-align: start;
         cursor: pointer;
     }
@@ -576,7 +576,7 @@
     /* skeleton */
     .t-skeleton {
         flex-shrink: 0;
-        width: 145px;
+        width: clamp(130px, 11vw, 190px);
     }
 
     .t-skeleton .t-poster {
@@ -614,7 +614,7 @@
     ══════════════════════════════════════════ */
     .genre-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(clamp(140px, 12vw, 200px), 1fr));
         gap: 8px;
         margin-bottom: 64px;
     }
@@ -688,9 +688,9 @@
        RESULTS PAGE
     ══════════════════════════════════════════ */
     .page {
-        max-width: 1200px;
+        max-width: 100%;
         margin: 0 auto;
-        padding: 32px 32px 96px;
+        padding: 32px clamp(20px, 5vw, 100px) 96px;
     }
 
     /* ── Selected / Featured ── */
@@ -746,7 +746,7 @@
 
     .feat-poster-col {
         flex-shrink: 0;
-        width: 180px;
+        width: clamp(160px, 14vw, 260px);
         overflow: hidden;
         background: var(--sur2);
     }
@@ -778,7 +778,7 @@
 
     .feat-title {
         font-family: 'Cormorant Garamond', Georgia, serif;
-        font-size: 2rem;
+        font-size: clamp(1.8rem, 2.5vw, 2.8rem);
         font-weight: 500;
         letter-spacing: -0.02em;
         color: var(--text);
@@ -872,8 +872,8 @@
 
     .grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
-        gap: 14px;
+        grid-template-columns: repeat(auto-fill, minmax(clamp(148px, 12vw, 220px), 1fr));
+        gap: clamp(10px, 1.2vw, 18px);
     }
 
     @keyframes cardIn {
@@ -1114,7 +1114,7 @@
         border: 1px solid var(--rule2);
         border-radius: 8px;
         width: 100%;
-        max-width: 880px;
+        max-width: clamp(760px, 72vw, 1100px);
         overflow: hidden;
         position: relative;
         animation: modalUp 0.3s ease both;
@@ -1207,7 +1207,7 @@
 
     .modal-poster-col {
         flex-shrink: 0;
-        width: 145px;
+        width: clamp(130px, 14vw, 200px);
         background: var(--sur2);
         border-right: 1px solid var(--rule);
     }
@@ -1239,7 +1239,7 @@
 
     .modal-info-col h2 {
         font-family: 'Cormorant Garamond', Georgia, serif;
-        font-size: 1.6rem;
+        font-size: clamp(1.5rem, 2.2vw, 2.2rem);
         font-weight: 500;
         letter-spacing: -0.02em;
         color: var(--text);
@@ -1774,7 +1774,7 @@
     ══════════════════════════════════════════ */
     footer {
         border-top: 1px solid var(--rule);
-        padding: 18px 32px;
+        padding: 18px clamp(20px, 5vw, 100px);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -1808,45 +1808,9 @@
        RESPONSIVE
     ══════════════════════════════════════════ */
     @media (max-width: 860px) {
-        .header {
-            padding: 0 20px;
-        }
-
-        .hero {
-            padding: 60px 20px 50px;
-        }
-
-        .hero h1 {
-            font-size: 3rem;
-        }
-
-        .home-section {
-            padding: 0 20px;
-        }
-
-        .page {
-            padding: 20px 20px 64px;
-        }
-
-        footer {
-            padding: 14px 20px;
-        }
-
-        .feat-poster-col {
-            width: 140px;
-        }
-
-        .feat-title {
-            font-size: 1.6rem;
-        }
-
         .grid {
             grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
             gap: 10px;
-        }
-
-        .genre-grid {
-            grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
         }
     }
 
@@ -1878,6 +1842,10 @@
 
         .hero-sub {
             font-size: 0.88rem;
+        }
+
+        .hero-search {
+            max-width: 100%;
         }
 
         .hero-search-inner {
@@ -1950,7 +1918,8 @@
         }
 
         /* ── trending ── */
-        .t-card {
+        .t-card,
+        .t-skeleton {
             width: 110px;
         }
 
@@ -2022,7 +1991,7 @@
 ══════════════════════════════════════════ */
 .mood-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(clamp(180px, 18vw, 260px), 1fr));
     gap: 10px;
 }
 
@@ -2388,7 +2357,7 @@ button.dropdown-item {
 .why-blurb.loading p { opacity: 0.5; font-style: italic; }
 
 /* ── Movie Night Matchmaker ── */
-.matchmaker-container { max-width: 760px; margin: 2rem auto; padding: 0 1rem; text-align: center; }
+.matchmaker-container { max-width: clamp(720px, 65vw, 1080px); margin: 2rem auto; padding: 0 clamp(16px, 3vw, 48px); text-align: center; }
 .matchmaker-title { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.4rem; }
 .matchmaker-subtitle { color: var(--text2); margin-bottom: 2rem; font-size: 0.95rem; }
 .matchmaker-grid { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem; }

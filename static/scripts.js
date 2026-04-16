@@ -50,7 +50,7 @@ function heroSearch() {
             card.className = 't-card';
             card.innerHTML = `
           <div class="t-poster"><img src="${m.poster}" alt="${m.title}" loading="lazy"
-            onerror="this.src='https://via.placeholder.com/300x450/1c1916/2e2a22?text=No+Poster'"/></div>
+            onerror="this.src='https://placehold.co/300x450/1c1916/2e2a22?text=No+Poster'"/></div>
           <div class="t-title">${m.title}</div>
           <div class="t-meta"><span class="t-star">&#9733; ${m.rating}</span> &middot; ${m.year}</div>`;
             card.addEventListener('click', () => {
@@ -132,7 +132,7 @@ async function openModal(data) {
 
     const img = $('modal-img');
     img.src = data.poster || '';
-    img.onerror = () => { img.src = 'https://via.placeholder.com/300x450/1c1916/2e2a22?text=No+Image'; };
+    img.onerror = () => { img.src = 'https://placehold.co/300x450/1c1916/2e2a22?text=No+Image'; };
 
     $('modal-trailer').innerHTML =
         `<div class="modal-loading">
@@ -202,9 +202,9 @@ async function openModal(data) {
                 el.className = 'cast-person';
                 el.style.animationDelay = `${i * 50}ms`;
                 el.innerHTML = `
-            <img src="${c.photo || 'https://via.placeholder.com/56x56/242019/2e2a22?text=?'}"
+            <img src="${c.photo || 'https://placehold.co/56x56/242019/2e2a22?text=?'}"
                  alt="${c.name}"
-                 onerror="this.src='https://via.placeholder.com/56x56/242019/2e2a22?text=?'"/>
+                 onerror="this.src='https://placehold.co/56x56/242019/2e2a22?text=?'"/>
             <div class="p-name">${c.name}</div>
             <div class="p-role">${c.character || ''}</div>`;
                 row.appendChild(el);
@@ -379,7 +379,7 @@ function renderFeatured(sel, results) {
     const posterCol = $('feat-poster-col');
     if (sel && sel.poster) {
         img.src = sel.poster;
-        img.onerror = () => { img.src = 'https://via.placeholder.com/300x450/1c1916/2e2a22?text=No+Image'; };
+        img.onerror = () => { img.src = 'https://placehold.co/300x450/1c1916/2e2a22?text=No+Image'; };
         posterCol.style.display = '';
     } else {
         img.src = '';
@@ -411,7 +411,7 @@ function renderGrid(results) {
         card.innerHTML = `
         <div class="poster-wrap">
           <img src="${r.poster}" alt="${r.title}" loading="lazy"
-               onerror="this.src='https://via.placeholder.com/300x450/1c1916/2e2a22?text=No+Poster'"/>
+               onerror="this.src='https://placehold.co/300x450/1c1916/2e2a22?text=No+Poster'"/>
           <div class="card-overlay">
             <h4>${r.title}</h4>
             <div class="meta-row">

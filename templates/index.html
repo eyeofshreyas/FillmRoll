@@ -35,9 +35,6 @@
         <path d="m21 21-4.35-4.35" />
       </svg>
       <input list="movie-list" id="movie-input" placeholder="Search a film…" autocomplete="off" />
-      <datalist id="movie-list">
-        {% for m in movies %}<option value="{{ m }}">{% endfor %}
-      </datalist>
     </div>
 
     <div class="header-right">
@@ -102,11 +99,8 @@
               <path d="m21 21-4.35-4.35" />
             </svg>
           </span>
-          <input list="movie-list-hero" id="hero-input" placeholder='Try "Interstellar" or "The Godfather"…'
+          <input list="movie-list" id="hero-input" placeholder='Try "Interstellar" or "The Godfather"…'
             autocomplete="off" />
-          <datalist id="movie-list-hero">
-            {% for m in movies %}<option value="{{ m }}">{% endfor %}
-          </datalist>
           <button class="hero-btn" onclick="heroSearch()">Find similar</button>
         </div>
       </div>
@@ -474,6 +468,10 @@
       <span>For You <span class="nav-badge" id="mob-foryou-badge"></span></span>
     </button>
   </nav>
+
+  <datalist id="movie-list">
+    {{ movie_options|safe }}
+  </datalist>
 
   <footer>
     <span class="footer-brand">Filmroll</span>

@@ -2,15 +2,26 @@ import os
 import sys
 import json
 import base64
+import threading
 import firebase_admin
 from firebase_admin import credentials, firestore
 from dotenv import load_dotenv
 
 load_dotenv()
 
+_firebase_init_lock = threading.Lock()
+
 def init_firebase():
     """Initialize Firebase App and return Firestore client."""
-    if not firebase_admin._apps:
+    # Fast check path
+    if firebase_admin._apps:
+        return firestore.client()
+
+    with _firebase_init_lock:
+        # Check again under lock to avoid race conditions
+        if firebase_admin._apps:
+            return firestore.client()
+
         # Try base64 encoded credentials (good for Heroku standard ENV vars)
         b64_creds = os.environ.get('FIREBASE_CREDENTIALS_BASE64')
         if b64_creds:
@@ -38,7 +49,8 @@ def init_firebase():
                         
                 
                 cred = credentials.Certificate(dict_creds)
-                firebase_admin.initialize_app(cred)
+                if not firebase_admin._apps:
+                    firebase_admin.initialize_app(cred)
                 return firestore.client()
             except Exception as e:
                 print(
@@ -52,7 +64,8 @@ def init_firebase():
         cred_path = os.environ.get('FIREBASE_CREDENTIALS', 'firebase-credentials.json')
         if os.path.exists(cred_path):
             cred = credentials.Certificate(cred_path)
-            firebase_admin.initialize_app(cred)
+            if not firebase_admin._apps:
+                firebase_admin.initialize_app(cred)
             return firestore.client()
         else:
             if os.environ.get('FIREBASE_CREDENTIALS_BASE64'):
@@ -63,8 +76,6 @@ def init_firebase():
                 )
             print("[Firebase] WARNING: No credentials found. Set FIREBASE_CREDENTIALS_BASE64 env var.", file=sys.stderr)
             return None
-    
-    return firestore.client()
 
 def get_user_ratings(email):
     """Retrieve all ratings for a given user email."""

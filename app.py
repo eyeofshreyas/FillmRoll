@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
 import requests
+import html
 from flask import (Flask, render_template, request, jsonify,
                    Response, stream_with_context,
                    session, redirect, url_for, flash)
@@ -54,7 +55,7 @@ google = oauth.register(
 )
 
 API_KEY   = os.environ.get('TMDB_API_KEY', '')
-IMG_BASE  = 'https://image.tmdb.org/t/p/w500'
+IMG_BASE  = 'https://image.tmdb.org/t/p/w342'
 LOGO_BASE = 'https://image.tmdb.org/t/p/w92'
 TMDB_BASE = 'https://api.themoviedb.org/3'
 SEARCH_MULTI_URL = f'{TMDB_BASE}/search/multi'
@@ -106,7 +107,7 @@ def get_poster(poster_path, title=None):
         live = fetch_poster_from_tmdb(title)
         if live:
             return live
-    return 'https://via.placeholder.com/500x750/ede9e0/7a7060?text=No+Poster'
+    return 'https://placehold.co/500x750/ede9e0/7a7060?text=No+Poster'
 
 
 def get_item_id_from_row(row):
@@ -306,8 +307,10 @@ def logout():
 @login_required
 def index():
     movie_list = sorted(movies['title'].dropna().tolist())
+    # Pre-render options in python (much faster than Jinja looping 10,000 strings)
+    movie_options = "".join(f'<option value="{html.escape(m)}">' for m in movie_list)
     user = session.get('user', {})
-    return render_template('index.html', movies=movie_list, user=user)
+    return render_template('index.html', movie_options=movie_options, user=user)
 
 
 @app.route('/trending')
