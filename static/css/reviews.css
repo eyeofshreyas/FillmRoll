@@ -1,0 +1,87 @@
+/* ══════════════════════════════════════════
+   REVIEWS UI
+══════════════════════════════════════════ */
+.review-textarea {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border-radius: 8px;
+    padding: 12px;
+    resize: vertical;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+.review-textarea:focus {
+    border-color: var(--gold);
+}
+.review-char-count {
+    font-size: 12px;
+    opacity: 0.5;
+}
+.review-submit-btn {
+    background: var(--gold);
+    color: var(--ink);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+.review-submit-btn:hover {
+    opacity: 0.8;
+}
+.review-submit-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.review-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 16px;
+}
+.review-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+.review-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.review-body {
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: var(--text2);
+}
+.review-delete-btn {
+    background: none;
+    border: none;
+    color: #ff6b6b;
+    font-size: 18px;
+    cursor: pointer;
+    margin-left: 12px;
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+}
+.review-delete-btn:hover {
+    opacity: 1;
+}
+.review-empty-state {
+    text-align: center;
+    padding: 24px;
+    opacity: 0.5;
+    font-style: italic;
+    font-size: 14px;
+}

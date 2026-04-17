@@ -1,0 +1,342 @@
+/* ══════════════════════════════════════════
+       RESULTS PAGE
+    ══════════════════════════════════════════ */
+    .page {
+        max-width: 100%;
+        margin: 0 auto;
+        padding: 32px clamp(20px, 5vw, 100px) 96px;
+    }
+
+    /* ── Selected / Featured ── */
+    #selected-section {
+        display: none;
+        margin-bottom: 48px;
+    }
+
+    .feat-label-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 14px;
+    }
+
+    .feat-label-row span {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.62rem;
+        font-weight: 400;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: var(--text3);
+        white-space: nowrap;
+    }
+
+    .feat-label-row hr {
+        flex: 1;
+        border: none;
+        border-top: 1px solid var(--rule);
+    }
+
+    .featured {
+        display: flex;
+        border-radius: var(--radius);
+        overflow: hidden;
+        border: 1px solid var(--rule);
+        cursor: pointer;
+        transition: border-color 0.25s;
+        background: var(--sur);
+    }
+
+    .featured:hover {
+        border-color: var(--rule2);
+    }
+
+    .featured:hover .feat-poster-img {
+        transform: scale(1.04);
+    }
+
+    .featured:hover .feat-cta-arrow {
+        transform: translateX(5px);
+    }
+
+    .feat-poster-col {
+        flex-shrink: 0;
+        width: clamp(160px, 14vw, 260px);
+        overflow: hidden;
+        background: var(--sur2);
+    }
+
+    .feat-poster-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.55s ease;
+    }
+
+    .feat-body {
+        flex: 1;
+        padding: 28px 30px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .feat-eyebrow {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.6rem;
+        font-weight: 400;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: var(--gold);
+        margin-bottom: 11px;
+    }
+
+    .feat-title {
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: clamp(1.8rem, 2.5vw, 2.8rem);
+        font-weight: 500;
+        letter-spacing: -0.02em;
+        color: var(--text);
+        line-height: 1.15;
+        margin-bottom: 10px;
+    }
+
+    .feat-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+    }
+
+    .feat-rating {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-family: 'Space Mono', monospace;
+        font-size: 0.75rem;
+        font-weight: 400;
+        color: var(--star);
+    }
+
+    .feat-overview {
+        font-size: 0.88rem;
+        font-weight: 300;
+        color: var(--text2);
+        line-height: 1.78;
+        max-width: 640px;
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        line-clamp: 4;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .feat-cta {
+        margin-top: 18px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: 'Space Mono', monospace;
+        font-size: 0.65rem;
+        font-weight: 400;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--text3);
+        transition: color 0.15s;
+    }
+
+    .featured:hover .feat-cta {
+        color: var(--gold);
+    }
+
+    .feat-cta-arrow {
+        transition: transform 0.2s;
+    }
+
+    /* ── Recs section label ── */
+    .section-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid var(--rule);
+    }
+
+    .section-row h3 {
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 1.35rem;
+        font-weight: 400;
+        color: var(--text);
+        letter-spacing: -0.01em;
+        font-style: italic;
+    }
+
+    .section-row .count-pill {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.62rem;
+        font-weight: 400;
+        color: var(--text3);
+    }
+
+    /* ── Grid cards ── */
+    #rec-section {
+        display: none;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(clamp(148px, 12vw, 220px), 1fr));
+        gap: clamp(10px, 1.2vw, 18px);
+    }
+
+    @keyframes cardIn {
+        from {
+            opacity: 0;
+            transform: translateY(12px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .card {
+        border-radius: var(--radius);
+        overflow: hidden;
+        cursor: pointer;
+        position: relative;
+        background: var(--sur2);
+        opacity: 0;
+        transition: transform 0.22s ease, box-shadow 0.22s ease;
+    }
+
+    .card.show {
+        animation: cardIn 0.4s ease forwards;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .card:hover .card-frame {
+        border-color: var(--rule2);
+    }
+
+    .card .poster-wrap {
+        position: relative;
+        aspect-ratio: 2/3;
+        overflow: hidden;
+        background: var(--sur3);
+    }
+
+    .card .poster-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.45s ease;
+    }
+
+    .card:hover .poster-wrap img {
+        transform: scale(1.06);
+    }
+
+    /* persistent bottom gradient */
+    .card-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top,
+                rgba(11, 10, 9, 0.97) 0%,
+                rgba(11, 10, 9, 0.5) 28%,
+                transparent 55%);
+        padding: 11px 10px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+    }
+
+    .card-overlay h4 {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--text);
+        line-height: 1.3;
+        margin-bottom: 5px;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .card-overlay .meta-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .card-overlay .c-star {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.65rem;
+        color: var(--star);
+    }
+
+    .card-overlay .c-year {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.6rem;
+        color: var(--text3);
+        opacity: 0.7;
+    }
+
+    .card-overlay .c-pct {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.6rem;
+        font-weight: 400;
+        color: var(--gold);
+        border: 1px solid rgba(200, 164, 94, 0.3);
+        border-radius: 3px;
+        padding: 1px 6px;
+    }
+
+    /* hover overlay */
+    .card-hover-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(11, 10, 9, 0.93);
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.22s ease;
+    }
+
+    .card:hover .card-hover-overlay {
+        opacity: 1;
+    }
+
+    .card-hover-overlay p {
+        font-size: 0.75rem;
+        line-height: 1.6;
+        color: var(--text2);
+        font-weight: 300;
+        display: -webkit-box;
+        -webkit-line-clamp: 7;
+        line-clamp: 7;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .card-hover-overlay .hover-cta {
+        margin-top: 12px;
+        font-family: 'Space Mono', monospace;
+        font-size: 0.62rem;
+        font-weight: 400;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--gold);
+    }
+
+    

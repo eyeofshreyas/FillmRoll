@@ -5,6 +5,7 @@ import base64
 import threading
 import firebase_admin
 from firebase_admin import credentials, firestore
+from google.cloud.firestore_v1.base_query import FieldFilter
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -165,3 +166,62 @@ def remove_from_watchlist(email, movie_id):
     except Exception as e:
         print(f"Firebase watchlist remove error: {e}")
         return False
+
+def save_review(email, name, picture, movie_title, movie_id, rating, comment):
+    """Save a review document to the reviews collection and upsert the rating."""
+    db = init_firebase()
+    if not db or not email:
+        return False
+    try:
+        save_user_rating(email, movie_title, rating)
+        
+        from datetime import datetime, timezone
+        review_data = {
+            'user_email': email,
+            'user_name': name,
+            'user_picture': picture,
+            'movie_title': movie_title,
+            'movie_id': movie_id,
+            'rating': rating,
+            'comment': comment,
+            'created_at': datetime.now(timezone.utc).isoformat(),
+            'likes': 0
+        }
+        db.collection('reviews').add(review_data)
+        return True
+    except Exception as e:
+        print(f"Firebase review save error: {e}")
+        return False
+
+def get_movie_reviews(movie_title, limit=20):
+    """Fetch all reviews for a specific movie, newest first."""
+    db = init_firebase()
+    if not db:
+        return []
+    try:
+        docs = db.collection('reviews') \
+                 .where(filter=FieldFilter('movie_title', '==', movie_title)) \
+                 .limit(limit) \
+                 .stream()
+        reviews = [{'id': doc.id, **doc.to_dict()} for doc in docs]
+        # Sort in Python to avoid needing a Firestore composite index
+        reviews.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        return reviews
+    except Exception as e:
+        print(f"Firebase reviews get error: {e}")
+        return []
+
+def delete_review(review_id, email):
+    """Let a user delete their own review."""
+    db = init_firebase()
+    if not db:
+        return False
+    try:
+        doc_ref = db.collection('reviews').document(review_id)
+        doc = doc_ref.get()
+        if doc.exists and doc.to_dict().get('user_email') == email:
+            doc_ref.delete()
+            return True
+    except Exception as e:
+        print(f"Firebase review delete error: {e}")
+    return False

@@ -11,8 +11,14 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-  <script src="{{ url_for('static', filename='scripts.js') }}" defer></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/cards.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/modal.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/reviews.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/ai.css') }}">
+  <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
 </head>
 
 <body>
@@ -25,6 +31,7 @@
     <nav class="header-nav">
       <button class="nav-link active" id="nav-home" onclick="navHome()">Home</button>
       <button class="nav-link" id="nav-trending" onclick="navTrending()">Trending</button>
+      <button class="nav-link" id="nav-new-releases" onclick="navNewReleases()">New Releases</button>
       <button class="nav-link" id="nav-browse" onclick="navBrowse()">Browse</button>
       <button class="nav-link" id="nav-foryou" onclick="navForYou()">For You <span class="nav-badge" id="foryou-badge"></span></button>
     </nav>
@@ -153,6 +160,19 @@
         <div class="t-line"></div>
         <div class="t-line short"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- ── NEW RELEASES ── -->
+  <div class="home-section fade-up" id="new-releases-section">
+    <div class="section-title">New releases <span style="font-size:0.7em;opacity:0.5;font-family:'Space Mono',monospace;">past 30 days</span></div>
+    <div class="trending-scroll" id="new-releases-row">
+      <div class="t-skeleton"><div class="t-poster"></div><div class="t-line"></div><div class="t-line short"></div></div>
+      <div class="t-skeleton"><div class="t-poster"></div><div class="t-line"></div><div class="t-line short"></div></div>
+      <div class="t-skeleton"><div class="t-poster"></div><div class="t-line"></div><div class="t-line short"></div></div>
+      <div class="t-skeleton"><div class="t-poster"></div><div class="t-line"></div><div class="t-line short"></div></div>
+      <div class="t-skeleton"><div class="t-poster"></div><div class="t-line"></div><div class="t-line short"></div></div>
+      <div class="t-skeleton"><div class="t-poster"></div><div class="t-line"></div><div class="t-line short"></div></div>
     </div>
   </div>
 
@@ -351,6 +371,7 @@
           <h2 id="modal-title"></h2>
           <div class="modal-tagline" id="modal-tagline"></div>
           <div class="chips" id="modal-chips"></div>
+          <button class="btn-watch-now" id="modal-watch-btn" style="display:none" onclick="watchNow()">&#9654; Watch Now</button>
           <div class="modal-overview" id="modal-overview"></div>
           <div id="modal-why-blurb" class="why-blurb hidden" aria-live="polite">
             <span class="why-icon" aria-hidden="true">✦</span>
@@ -383,6 +404,22 @@
                 aria-pressed="false" aria-label="Add to watchlist">
           <svg id="bookmark-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
         </button>
+      </div>
+
+      <div class="review-input-section" id="review-input-section" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease;">
+          <textarea class="review-textarea" id="review-text" rows="3" placeholder="Share your thoughts..." maxlength="500"></textarea>
+          <div class="review-meta" style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+              <span class="review-char-count" id="review-char-count">0/500</span>
+              <button class="review-submit-btn" onclick="submitReview()">Post Review ▸</button>
+          </div>
+      </div>
+
+      <div class="community-reviews" id="community-reviews" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); display: none;">
+          <div class="community-reviews-header" style="display:flex; align-items:center; gap:12px; margin-bottom: 16px;">
+              <h3 style="margin:0; font-size:16px; font-weight:600; color:#fff;">Community Reviews</h3>
+              <span class="count-pill" id="reviews-count" style="font-size:12px; opacity:0.7;">0</span>
+          </div>
+          <div id="reviews-list" style="display:flex; flex-direction:column; gap:16px;"></div>
       </div>
     </div>
   </div>

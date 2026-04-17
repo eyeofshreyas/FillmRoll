@@ -1,0 +1,406 @@
+/* ── Source tabs ── */
+    .src-tabs {
+        display: flex;
+        gap: 6px;
+        padding: 6px 8px;
+        background: #111;
+        border-bottom: 1px solid #222;
+    }
+    .src-tab {
+        padding: 4px 14px;
+        border: 1px solid #333;
+        border-radius: 4px;
+        background: transparent;
+        color: #888;
+        font-family: 'Space Mono', monospace;
+        font-size: 0.65rem;
+        cursor: pointer;
+        transition: color 0.15s, border-color 0.15s;
+    }
+    .src-tab:hover  { color: #ccc; border-color: #555; }
+    .src-tab.active { color: var(--gold, #c9a84c); border-color: var(--gold, #c9a84c); }
+
+/* ── Watch Now button ── */
+    .btn-watch-now {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 20px;
+        background: var(--gold, #c9a84c);
+        color: #0e0c09;
+        border: none;
+        border-radius: 5px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 12px;
+        transition: opacity 0.2s, transform 0.15s;
+    }
+    .btn-watch-now:hover  { opacity: 0.88; transform: translateY(-1px); }
+    .btn-watch-now:active { transform: none; }
+
+/* ══════════════════════════════════════════
+       MODAL
+    ══════════════════════════════════════════ */
+    .modal-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 400;
+        background: rgba(5, 4, 4, 0.88);
+        backdrop-filter: blur(14px);
+        overflow-y: auto;
+        padding: 40px 20px;
+        align-items: flex-start;
+        justify-content: center;
+    }
+
+    .modal-backdrop.open {
+        display: flex;
+    }
+
+    @keyframes modalUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .modal {
+        background: var(--deep);
+        border: 1px solid var(--rule2);
+        border-radius: 8px;
+        width: 100%;
+        max-width: clamp(760px, 72vw, 1100px);
+        overflow: hidden;
+        position: relative;
+        animation: modalUp 0.3s ease both;
+        box-shadow: 0 40px 100px rgba(0, 0, 0, 0.7);
+    }
+
+    .modal-close {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 28px;
+        height: 28px;
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid var(--rule2);
+        border-radius: 4px;
+        color: var(--text3);
+        font-size: 0.95rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+        z-index: 10;
+    }
+
+    .modal-close:hover {
+        background: var(--sur3);
+        color: var(--text);
+        border-color: var(--rule2);
+    }
+
+    /* trailer */
+    .modal-trailer {
+        width: 100%;
+        aspect-ratio: 16/9;
+        background: #000;
+        position: relative;
+    }
+
+    .modal-trailer iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        display: block;
+    }
+
+    .no-trailer {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        background: var(--sur);
+        color: var(--text3);
+        font-family: 'Space Mono', monospace;
+        font-size: 0.65rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+    }
+
+    .no-trailer svg {
+        opacity: 0.14;
+    }
+
+    .yt-fallback {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        position: absolute;
+        bottom: 10px;
+        right: 12px;
+        background: rgba(0,0,0,0.7);
+        color: #fff;
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        text-decoration: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+        transition: background 0.2s;
+    }
+    .yt-fallback:hover { background: #c00; }
+
+    /* movie info row */
+    .modal-meta-row {
+        display: flex;
+        border-bottom: 1px solid var(--rule);
+    }
+
+    .modal-poster-col {
+        flex-shrink: 0;
+        width: clamp(130px, 14vw, 200px);
+        background: var(--sur2);
+        border-right: 1px solid var(--rule);
+    }
+
+    .modal-poster-col img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .modal-info-col {
+        flex: 1;
+        padding: 22px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .modal-eyebrow {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.6rem;
+        font-weight: 400;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: var(--gold);
+        margin-bottom: 8px;
+    }
+
+    .modal-info-col h2 {
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: clamp(1.5rem, 2.2vw, 2.2rem);
+        font-weight: 500;
+        letter-spacing: -0.02em;
+        color: var(--text);
+        line-height: 1.15;
+        margin-bottom: 7px;
+    }
+
+    .modal-tagline {
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 0.95rem;
+        font-style: italic;
+        font-weight: 300;
+        color: var(--text3);
+        margin-bottom: 14px;
+        line-height: 1.4;
+    }
+
+    .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 16px;
+    }
+
+    .chip {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.62rem;
+        font-weight: 400;
+        border: 1px solid var(--rule2);
+        border-radius: 4px;
+        padding: 3px 9px;
+        color: var(--text3);
+        background: transparent;
+        letter-spacing: 0.05em;
+    }
+
+    .chip.a {
+        border-color: rgba(200, 164, 94, 0.3);
+        color: var(--gold);
+    }
+
+    .modal-overview {
+        font-size: 0.85rem;
+        font-weight: 300;
+        line-height: 1.75;
+        color: var(--text2);
+        border-top: 1px solid var(--rule);
+        padding-top: 14px;
+    }
+
+    /* cast */
+    .modal-cast-row {
+        padding: 18px 24px 22px;
+        border-top: 1px solid var(--rule);
+    }
+
+    .cast-label {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.62rem;
+        font-weight: 400;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: var(--text3);
+        margin-bottom: 14px;
+    }
+
+    .cast-scroll {
+        display: flex;
+        gap: 14px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+
+    .cast-scroll::-webkit-scrollbar {
+        height: 3px;
+    }
+
+    .cast-scroll::-webkit-scrollbar-thumb {
+        background: var(--rule);
+        border-radius: 2px;
+    }
+
+    @keyframes personIn {
+        from {
+            opacity: 0
+        }
+
+        to {
+            opacity: 1
+        }
+    }
+
+    .cast-person {
+        flex-shrink: 0;
+        width: 70px;
+        text-align: center;
+        opacity: 0;
+        animation: personIn 0.3s ease forwards;
+    }
+
+    .cast-person img {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid var(--rule);
+        margin: 0 auto 7px;
+        background: var(--sur3);
+        transition: border-color 0.15s;
+    }
+
+    .cast-person:hover img {
+        border-color: var(--gold);
+    }
+
+    .cast-person .p-name {
+        font-size: 0.68rem;
+        font-weight: 500;
+        color: var(--text2);
+        line-height: 1.2;
+    }
+
+    .cast-person .p-role {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.58rem;
+        color: var(--text3);
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .modal-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 52px;
+        color: var(--text3);
+        font-family: 'Space Mono', monospace;
+        font-size: 0.65rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+
+    
+/* ══════════════════════════════════════════
+   STAR RATING — modal
+══════════════════════════════════════════ */
+.modal-rate-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--rule);
+    margin-top: 4px;
+}
+
+.rate-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    flex-shrink: 0;
+}
+
+.star-rating {
+    display: flex;
+    gap: 4px;
+}
+
+.star {
+    font-size: 1.35rem;
+    color: var(--text3);
+    cursor: pointer;
+    transition: color 0.12s, transform 0.1s;
+    line-height: 1;
+    user-select: none;
+}
+
+.star:hover,
+.star.active {
+    color: var(--star);
+}
+
+.star:hover {
+    transform: scale(1.15);
+}
+
+.rate-msg {
+    font-size: 0.72rem;
+    color: var(--gold);
+    opacity: 0;
+    animation: none;
+    transition: opacity 0.3s;
+}
+
+.rate-msg:not(:empty) {
+    opacity: 1;
+}
+
