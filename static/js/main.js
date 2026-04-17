@@ -110,13 +110,25 @@ initStarRating(v => {
 });
 
 // ── Initialise modules ───────────────────────────────────────
-loadTrending(m => {
-    $('movie-input').value = m.title;
-    $('hero-input').value  = m.title;
-    handleFetchRecs();
-});
-
-loadNewReleases(handleOpenModal);
+// Single request for both trending + new-releases; parallel with other init calls
+fetch('/home-data')
+    .then(r => r.json())
+    .then(({ trending, new_releases }) => {
+        loadTrending(m => {
+            $('movie-input').value = m.title;
+            $('hero-input').value  = m.title;
+            handleFetchRecs();
+        }, trending);
+        loadNewReleases(handleOpenModal, new_releases);
+    })
+    .catch(() => {
+        loadTrending(m => {
+            $('movie-input').value = m.title;
+            $('hero-input').value  = m.title;
+            handleFetchRecs();
+        });
+        loadNewReleases(handleOpenModal);
+    });
 
 checkOllamaStatus();
 setInterval(checkOllamaStatus, 30000);

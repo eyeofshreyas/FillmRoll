@@ -1,8 +1,10 @@
 from flask import Blueprint, session, jsonify, request, render_template
 import random
 import html as _html
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from services.tmdb import tmdb_get, fetch_tmdb_discover
 from services.ml import recommend, get_movie_exact, get_all_titles
+from services import cache
 from blueprints.auth import login_required
 
 core_bp = Blueprint('core', __name__)
@@ -37,6 +39,51 @@ def do_recommend():
 @core_bp.route('/new-releases', methods=['GET'])
 @login_required
 def get_new_releases():
+    cached = cache.get('new-releases')
+    if cached is not None:
+        return jsonify(cached)
+    results = _build_new_releases()
+    cache.set('new-releases', results, ttl=1800)
+    return jsonify(results)
+
+@core_bp.route('/home-data', methods=['GET'])
+@login_required
+def home_data():
+    """Return trending + new-releases in one round-trip, fetching in parallel if uncached."""
+    trending_cached    = cache.get('trending')
+    new_releases_cached = cache.get('new-releases')
+
+    if trending_cached is not None and new_releases_cached is not None:
+        return jsonify({'trending': trending_cached, 'new_releases': new_releases_cached})
+
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        fut_t  = ex.submit(_build_trending)     if trending_cached    is None else None
+        fut_nr = ex.submit(_build_new_releases) if new_releases_cached is None else None
+        trending    = fut_t.result()  if fut_t  else trending_cached
+        new_releases = fut_nr.result() if fut_nr else new_releases_cached
+
+    cache.set('trending',     trending,     ttl=1800)
+    cache.set('new-releases', new_releases, ttl=1800)
+    return jsonify({'trending': trending, 'new_releases': new_releases})
+
+def _build_trending():
+    from services.tmdb import get_poster, get_item_id_from_row
+    data = tmdb_get('/trending/movie/week')
+    filtered = []
+    for r in data.get('results', []):
+        filtered.append({
+            'movie_id':     get_item_id_from_row(r),
+            'title':        r.get('title') or r.get('name', 'Unknown'),
+            'poster':       get_poster(r.get('poster_path')),
+            'rating':       round(float(r.get('vote_average', 0)), 1),
+            'overview':     r.get('overview', ''),
+            'release_date': r.get('release_date', '') or r.get('first_air_date', ''),
+        })
+        if len(filtered) == 12:
+            break
+    return filtered
+
+def _build_new_releases():
     from datetime import date, timedelta
     from services.tmdb import get_poster, get_item_id_from_row
     today = date.today()
@@ -59,27 +106,16 @@ def get_new_releases():
         })
         if len(results) == 12:
             break
-    return jsonify(results)
+    return results
 
 @core_bp.route('/trending', methods=['GET'])
 @login_required
 def get_trending():
-    data = tmdb_get('/trending/movie/week')
-    results = data.get('results', [])
-    filtered = []
-    for r in results:
-        from services.tmdb import get_poster, get_item_id_from_row
-        d = {
-            'movie_id':     get_item_id_from_row(r),
-            'title':        r.get('title') or r.get('name', 'Unknown'),
-            'poster':       get_poster(r.get('poster_path')),
-            'rating':       round(float(r.get('vote_average', 0)), 1),
-            'overview':     r.get('overview', ''),
-            'release_date': r.get('release_date', '') or r.get('first_air_date', ''),
-        }
-        filtered.append(d)
-        if len(filtered) == 12:
-            break
+    cached = cache.get('trending')
+    if cached is not None:
+        return jsonify(cached)
+    filtered = _build_trending()
+    cache.set('trending', filtered, ttl=1800)
     return jsonify(filtered)
 
 GENRE_IDS = {
@@ -188,15 +224,35 @@ def movie_details():
         if not item_id:
             return jsonify({'error': 'Not found'}), 404
 
-        # ── Trailer ──────────────────────────────────────────────
-        videos  = tmdb_get(f'/{media_type}/{item_id}/videos').get('results', [])
-        credits = tmdb_get(f'/{media_type}/{item_id}/credits')
+        # ── Parallel TMDB fetch (videos, credits, details, providers) ──
+        from services.tmdb import IMG_BASE, LOGO_BASE
+        country = data.get('country', 'US').upper()
+
+        def _fetch_videos():   return tmdb_get(f'/{media_type}/{item_id}/videos').get('results', [])
+        def _fetch_credits():  return tmdb_get(f'/{media_type}/{item_id}/credits')
+        def _fetch_detail():   return tmdb_get(f'/{media_type}/{item_id}')
+        def _fetch_providers():return tmdb_get(f'/{media_type}/{item_id}/watch/providers')
+
+        with ThreadPoolExecutor(max_workers=4) as ex:
+            fv = ex.submit(_fetch_videos)
+            fc = ex.submit(_fetch_credits)
+            fd = ex.submit(_fetch_detail)
+            fp = ex.submit(_fetch_providers)
+            videos  = fv.result()
+            credits = fc.result()
+            detail  = fd.result()
+            providers_data = fp.result()
 
         # If both empty, the media_type may be wrong — try the other
         if not videos and not credits.get('cast'):
             alt = 'tv' if media_type == 'movie' else 'movie'
-            alt_v = tmdb_get(f'/{alt}/{item_id}/videos').get('results', [])
-            alt_c = tmdb_get(f'/{alt}/{item_id}/credits')
+            def _alt_videos():  return tmdb_get(f'/{alt}/{item_id}/videos').get('results', [])
+            def _alt_credits(): return tmdb_get(f'/{alt}/{item_id}/credits')
+            with ThreadPoolExecutor(max_workers=2) as ex:
+                av = ex.submit(_alt_videos)
+                ac = ex.submit(_alt_credits)
+                alt_v = av.result()
+                alt_c = ac.result()
             if alt_v or alt_c.get('cast'):
                 media_type = alt
                 videos     = alt_v
@@ -216,7 +272,6 @@ def movie_details():
                     trailer_key = v['key']; break
 
         # ── Cast ─────────────────────────────────────────────────
-        from services.tmdb import IMG_BASE, LOGO_BASE
         cast = []
         for c in credits.get('cast', [])[:8]:
             cast.append({
@@ -226,14 +281,11 @@ def movie_details():
             })
 
         # ── Extra details ─────────────────────────────────────────
-        detail  = tmdb_get(f'/{media_type}/{item_id}')
         genres  = [g['name'] for g in detail.get('genres', [])]
         runtime = detail.get('runtime') if media_type == 'movie' else (detail.get('episode_run_time') or [None])[0]
         tagline = detail.get('tagline', '')
 
         # ── Watch Providers ───────────────────────────────────────
-        country        = data.get('country', 'US').upper()
-        providers_data = tmdb_get(f'/{media_type}/{item_id}/watch/providers')
         all_regions    = providers_data.get('results', {})
         region         = all_regions.get(country) or all_regions.get('US') or {}
 

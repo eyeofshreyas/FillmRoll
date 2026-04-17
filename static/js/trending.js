@@ -5,10 +5,9 @@ import { $ } from './utils.js';
  * Fetch trending movies from the server and render the carousel.
  * @param {function} onCardClick - callback(movie) when a card is clicked
  */
-export async function loadTrending(onCardClick) {
+export async function loadTrending(onCardClick, prefetchedList) {
     try {
-        const res = await fetch('/trending');
-        const list = await res.json();
+        const list = prefetchedList ?? await fetch('/trending').then(r => r.json());
         const row = $('trending-row');
         if (!list.length) return;
         row.innerHTML = '';

@@ -1,10 +1,9 @@
 /* ── new-releases.js ── movies released in the past 30 days ── */
 import { $ } from './utils.js';
 
-export async function loadNewReleases(onCardClick) {
+export async function loadNewReleases(onCardClick, prefetchedList) {
     try {
-        const res  = await fetch('/new-releases');
-        const list = await res.json();
+        const list = prefetchedList ?? await fetch('/new-releases').then(r => r.json());
         const row  = $('new-releases-row');
         if (!list.length) {
             document.getElementById('new-releases-section').style.display = 'none';
