@@ -339,4 +339,19 @@
         color: var(--gold);
     }
 
+/* ══════════════════════════════════════════
+   MOBILE — ≤560px
+══════════════════════════════════════════ */
+@media (max-width: 560px) {
+    /* hover overlay never triggers on touch — hide it so tap goes straight to modal */
+    .card-hover-overlay {
+        display: none;
+    }
+
+    /* featured card body: reduce desktop padding */
+    .feat-body {
+        padding: 14px 16px;
+    }
+}
+
     
