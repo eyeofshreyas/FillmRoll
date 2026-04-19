@@ -462,3 +462,33 @@
     color: var(--gold);
 }
 
+/* ══════════════════════════════════════════
+   MOBILE — ≤560px
+══════════════════════════════════════════ */
+@media (max-width: 560px) {
+    /* hero inner: clamp(600px,55vw,860px) resolves to ~214px on 390px screen */
+    .hero-inner {
+        max-width: 100%;
+    }
+
+    /* hero search: same clamp issue */
+    .hero-search {
+        max-width: 100%;
+    }
+
+    /* iOS auto-zoom prevention (must be ≥16px) */
+    .hero-search-inner input {
+        font-size: 16px;
+    }
+
+    /* home section side padding */
+    .home-section {
+        padding: 0 16px;
+    }
+
+    /* trending cards: narrower for thumb reach on small screens */
+    .t-card,
+    .t-skeleton {
+        width: 110px;
+    }
+}
