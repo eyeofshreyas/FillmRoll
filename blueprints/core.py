@@ -9,13 +9,17 @@ from blueprints.auth import login_required
 
 core_bp = Blueprint('core', __name__)
 
+# Built once at first request, reused for the dyno's lifetime
+_movie_options_cache: str | None = None
+
 @core_bp.route('/')
 @login_required
 def index():
-    movie_list = get_all_titles()
-    # Pre-render options in Python (much faster than Jinja looping 10,000 strings)
-    movie_options = ''.join(f'<option value="{_html.escape(m)}">' for m in movie_list)
-    return render_template('index.html', movie_options=movie_options, user=session.get('user'))
+    global _movie_options_cache
+    if _movie_options_cache is None:
+        movie_list = get_all_titles()
+        _movie_options_cache = ''.join(f'<option value="{_html.escape(m)}">' for m in movie_list)
+    return render_template('index.html', movie_options=_movie_options_cache, user=session.get('user'))
 
 @core_bp.route('/recommend', methods=['POST'])
 @login_required
