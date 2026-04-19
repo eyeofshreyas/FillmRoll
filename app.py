@@ -33,6 +33,19 @@ app.register_blueprint(ai_bp)
 app.register_blueprint(user_bp)
 app.register_blueprint(reviews_bp)
 
+# Pre-warm trending + new-releases cache in the background so the first
+# user request after a cold start doesn't have to wait for TMDB calls.
+import threading
+def _warm_home_cache():
+    try:
+        from blueprints.core import _build_trending, _build_new_releases
+        from services import cache
+        cache.set('trending',     _build_trending(),     ttl=1800)
+        cache.set('new-releases', _build_new_releases(), ttl=1800)
+    except Exception:
+        pass
+threading.Thread(target=_warm_home_cache, daemon=True).start()
+
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     # Use 'stat' reloader to avoid watchdog scanning site-packages on every request
