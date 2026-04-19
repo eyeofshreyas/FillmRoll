@@ -70,9 +70,12 @@ function buildPlayer(type, movieId, activeIdx) {
         `<button class="src-tab${i === activeIdx ? ' active' : ''}"
                  onclick="switchSource(${i})">${s.label}</button>`
     ).join('');
+    // sandbox without allow-popups and allow-top-navigation blocks popup/redirect ads
     $('modal-trailer').innerHTML =
         `<div class="src-tabs" data-type="${type}" data-id="${movieId}">${tabs}</div>
-         <iframe src="${src}" allowfullscreen allow="fullscreen; autoplay"></iframe>`;
+         <iframe src="${src}"
+                 sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock"
+                 allowfullscreen allow="fullscreen; autoplay"></iframe>`;
 }
 
 export function switchSource(idx) {
