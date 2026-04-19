@@ -85,3 +85,19 @@
     font-style: italic;
     font-size: 14px;
 }
+
+/* ══════════════════════════════════════════
+   MOBILE — ≤560px
+══════════════════════════════════════════ */
+@media (max-width: 560px) {
+    /* prevent long reviewer names / text from overflowing narrow screens */
+    .review-card {
+        word-break: break-word;
+    }
+
+    /* review submit button: full width for easy tap */
+    .review-submit-btn {
+        width: 100%;
+        padding: 12px 16px;
+    }
+}
