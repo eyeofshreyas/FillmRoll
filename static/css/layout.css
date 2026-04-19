@@ -744,3 +744,25 @@ button.dropdown-item {
   .taste-plus { padding-top: 0; align-self: center; }
 }
 
+@media (max-width: 560px) {
+    /* clamp(720px,65vw,1080px) resolves too narrow on phones */
+    .matchmaker-container {
+        max-width: 100%;
+        padding: 0 16px;
+        margin: 1rem auto;
+    }
+
+    /* full-width tap target */
+    .matchmaker-btn {
+        width: 100%;
+    }
+
+    /* matchmaker cards: tighten layout */
+    .matchmaker-card {
+        gap: 0.75rem;
+    }
+
+    .matchmaker-title {
+        font-size: 1.3rem;
+    }
+}
