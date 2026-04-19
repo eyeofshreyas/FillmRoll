@@ -427,5 +427,10 @@
     .modal-cast-row {
         padding: 14px 16px 18px;
     }
+
+    /* clear the 60px bottom nav so last row (ratings) isn't hidden behind it */
+    .modal {
+        padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+    }
 }
 
