@@ -404,3 +404,28 @@
     opacity: 1;
 }
 
+/* ══════════════════════════════════════════
+   MOBILE — ≤560px
+══════════════════════════════════════════ */
+@media (max-width: 560px) {
+    /* reduce side padding so content fits 360px screens */
+    .modal-info-col {
+        padding: 14px 16px;
+    }
+
+    /* reduce rate row padding */
+    .modal-rate-row {
+        padding: 12px 16px;
+    }
+
+    /* star tap targets: rendered size ~22px → add padding to reach 44px */
+    .star {
+        padding: 10px 4px;
+    }
+
+    /* cast row side padding */
+    .modal-cast-row {
+        padding: 14px 16px 18px;
+    }
+}
+
