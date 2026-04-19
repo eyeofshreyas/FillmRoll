@@ -428,10 +428,13 @@
         padding: 14px 16px 18px;
     }
 
-    /* clear the 60px bottom nav so last row (ratings) isn't hidden behind it */
+    /* modal.css base sets overflow:hidden — override here (after the base rule)
+       so the bottom-sheet can actually scroll on mobile */
     .modal {
-        padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
+        padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
     }
 
     /* backdrop has overflow-y:auto in base — disable it on mobile so the
