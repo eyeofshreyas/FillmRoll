@@ -16,6 +16,18 @@
 
 ---
 
+## Project description
+
+FilmRoll is a full-stack movie discovery web application that combines **live TMDB data** (trending, new releases, details, and watch providers) with a **vector-search recommender** (Qdrant) and optional **personalization from your ratings** (stored in Firestore). Users sign in with **Google OAuth**, build a watchlist, write reviews, and can optionally use an **AI assistant** (Hugging Face) to search the catalog and chat about recommendations.
+
+At a high level:
+
+- **Catalog + embeddings** are produced by `movie-recommender-system.ipynb` (`movies_dict.pkl`, `vectors.pkl`)
+- **Vectors** are uploaded to Qdrant using `scripts/upload_to_qdrant.py`
+- **The Flask app** serves UI + JSON APIs from `blueprints/` and queries Qdrant at request time for recommendations
+
+---
+
 ## What it does
 
 - **Similar-title recommendations** — Each title in your catalog has a dense embedding. Qdrant returns nearest neighbors (cosine similarity) for “more like this.”
