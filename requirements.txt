@@ -1,11 +1,16 @@
-numpy==2.4.3
-pandas==2.3.3
-requests==2.33.0
-scikit-learn==1.8.0
-nltk==3.9.4
+# ── Web app (Flask + blueprints) ──────────────────────────────────
 Flask==3.1.3
 Authlib==1.6.9
 python-dotenv==1.2.2
 gunicorn==25.3.0
+
+# ── Data & APIs ───────────────────────────────────────────────────
 firebase-admin==7.4.0
 qdrant-client==1.17.1
+requests==2.33.0
+numpy==2.4.3
+pandas==2.3.3
+
+# Notebook `movie-recommender-system.ipynb` (build movies_dict.pkl + vectors.pkl):
+#   pip install scikit-learn nltk
+# Then upload vectors to Qdrant:  python scripts/upload_to_qdrant.py
